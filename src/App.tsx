@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Moon, Sun, Monitor, Eye, Edit3, 
-  Share2, Menu, X, Command as CommandIcon,
+  Share2, Menu, Command as CommandIcon,
   Palette, Smartphone, Info
 } from 'lucide-react';
 import Editor from './components/Editor';
@@ -157,19 +157,23 @@ export default function App() {
       <Sidebar 
         documents={documents} activeId={activeId} onSelect={setActiveId}
         onNew={createNewDoc} onDelete={deleteDoc} isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(false)}
+        theme={theme} setTheme={setTheme}
+        palette={palette} setPalette={setPalette}
       />
 
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div className="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden">
         {/* Header */}
         <header className="h-[var(--header-height)] flex items-center justify-between px-6 border-b border-border/50 glass z-20 shrink-0">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 min-w-0">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2 hover:bg-muted rounded-xl transition-colors shrink-0"
+              title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
             >
-              {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Menu className="w-5 h-5" />
             </button>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <input 
                 value={activeDoc.title}
                 onChange={(e) => setDocuments(docs => docs.map(d => d.id === activeId ? { ...d, title: e.target.value } : d))}
@@ -182,27 +186,30 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Palette Switcher */}
-            <div className="hidden sm:flex items-center bg-muted/50 p-1 rounded-xl mr-2 border border-border/50 shadow-inner">
+            {/* Palette Switcher - Hidden on mobile */}
+            <div className="hidden lg:flex items-center bg-muted/50 p-1 rounded-xl mr-2 border border-border/50 shadow-inner">
                <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-50")} title="Standard"><Palette className="w-4 h-4 text-primary" /></button>
                <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-50")} title="Velvet"><Palette className="w-4 h-4 text-[#e11d48]" /></button>
                <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-50")} title="Slate"><Palette className="w-4 h-4 text-[#475569]" /></button>
             </div>
 
             <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
-              <button onClick={() => setTheme('light')} className={cn("p-2 rounded-lg transition-all", theme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Sun className="w-4 h-4" /></button>
-              <button onClick={() => setTheme('dark')} className={cn("p-2 rounded-lg transition-all", theme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Moon className="w-4 h-4" /></button>
-              <button onClick={() => setTheme('system')} className={cn("p-2 rounded-lg transition-all", theme === 'system' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Monitor className="w-4 h-4" /></button>
+              <button onClick={() => setTheme('light')} className={cn("p-2 rounded-lg transition-all", theme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Sun className="w-3.5 h-3.5" /></button>
+              <button onClick={() => setTheme('dark')} className={cn("p-2 rounded-lg transition-all", theme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Moon className="w-3.5 h-3.5" /></button>
+              <button onClick={() => setTheme('system')} className={cn("p-2 rounded-lg transition-all", theme === 'system' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Monitor className="w-3.5 h-3.5" /></button>
             </div>
             
-            <button className="p-2.5 bg-primary text-primary-foreground rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all ml-2 hidden md:block">
+            <button className="p-2.5 bg-primary text-primary-foreground rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all ml-1 hidden lg:block">
               <Share2 className="w-4 h-4" />
             </button>
           </div>
         </header>
 
         {/* Toolbar */}
-        <Toolbar onAction={handleToolbarAction} />
+        <Toolbar 
+          onAction={handleToolbarAction} 
+          className={cn(viewMode === 'view' && "hidden lg:flex")}
+        />
 
         {/* Editor & Preview */}
         <main className="flex-1 flex overflow-hidden lg:flex-row flex-col">

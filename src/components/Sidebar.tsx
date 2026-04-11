@@ -1,7 +1,8 @@
 import React from 'react';
 import { 
   FileText, Plus, Search, Trash2, 
-  Settings, Zap, Layout
+  Settings, Zap, Layout, X, Palette, 
+  Sun, Moon, Monitor
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -24,6 +25,11 @@ interface SidebarProps {
   onNew: () => void;
   onDelete: (id: string) => void;
   isOpen: boolean;
+  onToggle: () => void;
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (t: 'light' | 'dark' | 'system') => void;
+  palette: 'default' | 'velvet' | 'slate';
+  setPalette: (p: 'default' | 'velvet' | 'slate') => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -32,12 +38,21 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelect, 
   onNew, 
   onDelete,
-  isOpen
+  isOpen,
+  onToggle,
+  theme,
+  setTheme,
+  palette,
+  setPalette
 }) => {
   return (
     <aside className={cn(
-      "h-full bg-muted/20 backdrop-blur-md border-r border-border flex flex-col transition-all duration-300 ease-in-out z-30",
-      isOpen ? "w-[280px]" : "w-0 -translate-x-full"
+      "h-full flex flex-col transition-all duration-300 ease-in-out z-[100] overflow-hidden",
+      "lg:relative fixed inset-y-0 left-0",
+      "lg:bg-background bg-background border-r border-border shadow-xl lg:shadow-none",
+      isOpen 
+        ? "w-[var(--sidebar-width)] translate-x-0 opacity-100 visible" 
+        : "w-0 -translate-x-full opacity-0 invisible"
     )}>
       {/* Sidebar Header */}
       <div className="p-6 flex items-center justify-between border-b border-border/50">
@@ -47,13 +62,21 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <span className="font-bold tracking-tight">Docs</span>
         </div>
-        <button 
-          onClick={onNew}
-          className="p-1.5 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-colors border border-transparent hover:border-primary/20"
-          title="New Document"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={onNew}
+            className="p-1.5 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-colors"
+            title="New Document"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={onToggle}
+            className="lg:hidden p-1.5 hover:bg-muted text-muted-foreground rounded-lg"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Document Search / Filter */}
@@ -105,8 +128,28 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-4 border-t border-border/50">
-        <div className="glass-inset rounded-2xl p-4 flex items-center justify-between">
+      <div className="p-4 border-t border-border/50 space-y-4">
+        {/* Mobile-only Theme/Palette Controls */}
+        <div className="lg:hidden space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <span className="text-[10px] uppercase tracking-widest font-bold opacity-50">Theme</span>
+            <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
+              <button onClick={() => setTheme('light')} className={cn("p-1.5 rounded-lg transition-all", theme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Sun className="w-3 h-3" /></button>
+              <button onClick={() => setTheme('dark')} className={cn("p-1.5 rounded-lg transition-all", theme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Moon className="w-3 h-3" /></button>
+              <button onClick={() => setTheme('system')} className={cn("p-1.5 rounded-lg transition-all", theme === 'system' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Monitor className="w-3 h-3" /></button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between px-2">
+            <span className="text-[10px] uppercase tracking-widest font-bold opacity-50">Palette</span>
+            <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
+               <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-50")}><Palette className="w-3.5 h-3.5 text-primary" /></button>
+               <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-50")}><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
+               <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-50")}><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-inset rounded-2xl p-4 flex items-center justify-between bg-muted/20">
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-amber-500 fill-amber-500/20" />
             <span className="text-xs font-medium">Pro Account</span>

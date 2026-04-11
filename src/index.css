@@ -21,6 +21,13 @@
   --input: 220 13% 91%;
   --ring: 262 83% 58%;
   --radius: 0.75rem;
+  --header-height: 72px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 60px;
+  }
 }
 
 .dark {
@@ -56,6 +63,7 @@
   background-color: hsla(var(--background) / 0.8);
   backdrop-filter: blur(20px);
   border: 1px solid hsla(var(--border) / 0.5);
+  z-index: 20;
 }
 
 .glass-card {
@@ -79,4 +87,12 @@
   padding: 1rem;
   border-radius: 1rem;
   background-color: hsla(var(--muted) / 0.3);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -54,7 +54,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, className }) => {
 
   return (
     <div className={cn(
-      "flex items-center gap-1 p-1 bg-muted/30 backdrop-blur-sm border-b border-border h-12 overflow-x-auto no-scrollbar",
+      "flex items-center gap-1 p-1 bg-muted/30 backdrop-blur-sm border-b border-border h-[var(--toolbar-height)] overflow-x-auto no-scrollbar shrink-0",
       className
     )}>
       <div className="flex items-center gap-1 px-2">
