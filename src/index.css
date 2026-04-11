@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: oklch(0.627 0.265 303.9);
+  --color-primary-foreground: oklch(0.985 0 0);
+  
+  --color-background: oklch(0.985 0 0);
+  --color-foreground: oklch(0.145 0 0);
+  
+  --color-muted: oklch(0.95 0 0);
+  --color-muted-foreground: oklch(0.45 0 0);
+  
+  --color-border: oklch(0.9 0 0);
+  --color-input: oklch(0.9 0 0);
+  --color-ring: oklch(0.627 0.265 303.9);
+  
+  --radius-lg: 0.75rem;
+  --radius-md: calc(0.75rem - 2px);
+  --radius-sm: calc(0.75rem - 4px);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
+  }
+}
+
+/* Glassmorphism */
+.glass {
+  @apply bg-white/70 dark:bg-black/70 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-xl;
+}
+
+.glass-card {
+  @apply bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm border border-white/20 dark:border-white/10 rounded-xl transition-all duration-200;
+}
+
+/* Markdown Specifics */
+.markdown-body {
+  @apply !bg-transparent !text-foreground font-sans;
+}
+
+.markdown-body pre {
+  @apply !bg-muted/50 dark:!bg-muted/20 !border-border rounded-lg;
+}
+
+.markdown-body code {
+  @apply !bg-muted/50 dark:!bg-muted/20 !text-primary rounded px-1;
+}
+
+/* Sync Scroll Alignment */
+.sync-scroll-container {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+/* CodeMirror adjustments */
+.cm-editor {
+  @apply !bg-transparent text-base;
+}
+
+.cm-scroller {
+  @apply font-mono;
+}
