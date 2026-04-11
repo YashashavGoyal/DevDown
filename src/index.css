@@ -1,63 +1,82 @@
 @import "tailwindcss";
 
-@theme {
-  --color-primary: oklch(0.627 0.265 303.9);
-  --color-primary-foreground: oklch(0.985 0 0);
-  
-  --color-background: oklch(0.985 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  
-  --color-muted: oklch(0.95 0 0);
-  --color-muted-foreground: oklch(0.45 0 0);
-  
-  --color-border: oklch(0.9 0 0);
-  --color-input: oklch(0.9 0 0);
-  --color-ring: oklch(0.627 0.265 303.9);
-  
-  --radius-lg: 0.75rem;
-  --radius-md: calc(0.75rem - 2px);
-  --radius-sm: calc(0.75rem - 4px);
+:root {
+  --background: 0 0% 100%;
+  --foreground: 224 71.4% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 224 71.4% 4.1%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 224 71.4% 4.1%;
+  --primary: 262 83% 58%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 220 14.3% 95.9%;
+  --secondary-foreground: 220.9 39.3% 11%;
+  --muted: 220 14.3% 95.9%;
+  --muted-foreground: 220 8.9% 46.1%;
+  --accent: 262 83% 58%;
+  --accent-foreground: 220.9 39.3% 11%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 262 83% 58%;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: 224 71.4% 4.1%;
+  --foreground: 210 20% 98%;
+  --card: 224 71.4% 4.1%;
+  --card-foreground: 210 20% 98%;
+  --popover: 224 71.4% 4.1%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 263 70% 50%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 215 27.9% 16.9%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 215 27.9% 16.9%;
+  --muted-foreground: 217.9 10.6% 64.9%;
+  --accent: 263 70% 50%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 215 27.9% 16.9%;
+  --input: 215 27.9% 16.9%;
+  --ring: 263 70% 50%;
 }
 
 @layer base {
   body {
-    @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
 
-/* Glassmorphism */
 .glass {
-  @apply bg-white/70 dark:bg-black/70 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-xl;
+  background-color: hsla(var(--background) / 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid hsla(var(--border) / 0.5);
 }
 
 .glass-card {
-  @apply bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm border border-white/20 dark:border-white/10 rounded-xl transition-all duration-200;
+  background-color: hsla(var(--card) / 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsla(255 255% 255% / 0.1);
+  border-radius: 1.25rem;
 }
 
-/* Markdown Specifics */
 .markdown-body {
-  @apply !bg-transparent !text-foreground font-sans;
+  background-color: transparent !important;
+  color: hsl(var(--foreground)) !important;
 }
 
-.markdown-body pre {
-  @apply !bg-muted/50 dark:!bg-muted/20 !border-border rounded-lg;
-}
-
-.markdown-body code {
-  @apply !bg-muted/50 dark:!bg-muted/20 !text-primary rounded px-1;
-}
-
-/* Sync Scroll Alignment */
-.sync-scroll-container {
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-}
-
-/* CodeMirror adjustments */
 .cm-editor {
-  @apply !bg-transparent text-base;
+  background-color: transparent !important;
 }
 
-.cm-scroller {
-  @apply font-mono;
+.katex-display {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 1rem;
+  background-color: hsla(var(--muted) / 0.3);
 }

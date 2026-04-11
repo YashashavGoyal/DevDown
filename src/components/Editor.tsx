@@ -10,9 +10,10 @@ interface EditorProps {
   onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
   containerRef?: React.RefObject<HTMLDivElement | null>;
   isDark?: boolean;
+  onEditorCreate?: (view: EditorView) => void;
 }
 
-const Editor: React.FC<EditorProps> = ({ value, onChange, onScroll, containerRef, isDark }) => {
+const Editor: React.FC<EditorProps> = ({ value, onChange, onScroll, containerRef, isDark, onEditorCreate }) => {
   const handleChange = useCallback((val: string) => {
     onChange(val);
   }, [onChange]);
@@ -27,6 +28,7 @@ const Editor: React.FC<EditorProps> = ({ value, onChange, onScroll, containerRef
         value={value}
         height="100%"
         theme={isDark ? 'dark' : 'light'}
+        onCreateEditor={onEditorCreate}
         extensions={[
           markdown({ codeLanguages: languages }),
           EditorView.lineWrapping,
