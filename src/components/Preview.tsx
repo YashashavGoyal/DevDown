@@ -75,6 +75,24 @@ const Preview: React.FC<PreviewProps> = ({ value, containerRef, onScroll }) => {
               {children}
             </a>
           ),
+          ul: ({ children }) => (
+            <ul className="list-disc list-outside ml-6 my-4 space-y-2 text-foreground/90">
+              {children}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal list-outside ml-6 my-4 space-y-2 text-foreground/90">
+              {children}
+            </ol>
+          ),
+          li: ({ children }) => (
+            <li className="pl-1 marker:text-primary transition-colors">
+              {children}
+            </li>
+          ),
+          p: ({ children }) => <p className="my-4 text-foreground/90 leading-relaxed">{children}</p>,
+          h3: ({ children }) => <h3 className="text-xl font-bold mb-3 mt-8 tracking-tight">{children}</h3>,
+          h4: ({ children }) => <h4 className="text-lg font-bold mb-2 mt-6 tracking-tight">{children}</h4>,
         }}
       >
         {value}

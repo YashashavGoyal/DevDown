@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Italic, Link, Image, List, ListOrdered, 
   Code, Table, SquareFunction, LayoutDashboard, 
-  Type, Heading1, Heading2, Quote
+  Type, Heading1, Heading2, Quote, GitMerge
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -75,7 +75,8 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, className }) => {
         <Button icon={Table} onClick={() => onAction('table')} title="Table" />
         <Divider />
         <Button icon={SquareFunction} onClick={() => onAction('math')} title="Math Formula (KaTeX)" />
-        <Button icon={LayoutDashboard} onClick={() => onAction('mermaid-graph')} title="Mermaid Diagram" />
+        <Button icon={LayoutDashboard} onClick={() => onAction('mermaid-graph')} title="Mermaid Flowchart" />
+        <Button icon={GitMerge} onClick={() => onAction('mermaid-sequence')} title="Mermaid Sequence" />
       </div>
     </div>
   );

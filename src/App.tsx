@@ -100,17 +100,28 @@ export default function App() {
 
     let insertion = '';
 
+    const getMultiLineInsertion = (prefix: string | ((line: string, i: number) => string)) => {
+      if (!selectedText) return typeof prefix === 'function' ? prefix('text', 0) : `${prefix}text`;
+      return selectedText.split('\n').map((line, i) => 
+        typeof prefix === 'function' ? prefix(line, i) : `${prefix}${line}`
+      ).join('\n');
+    };
+
     switch (action) {
       case 'bold': insertion = `**${selectedText || 'bold text'}**`; break;
       case 'italic': insertion = `*${selectedText || 'italic text'}*`; break;
       case 'heading1': insertion = `\n# ${selectedText || 'Heading 1'}\n`; break;
       case 'heading2': insertion = `\n## ${selectedText || 'Heading 2'}\n`; break;
-      case 'quote': insertion = `\n> ${selectedText || 'Blockquote'}\n`; break;
+      case 'quote': insertion = `\n${getMultiLineInsertion('> ')}\n`; break;
       case 'link': insertion = `[${selectedText || 'link text'}](https://)`; break;
       case 'image': insertion = `![${selectedText || 'alt text'}](https://)`; break;
+      case 'list': insertion = `\n${getMultiLineInsertion('- ')}\n`; break;
+      case 'list-ordered': insertion = `\n${getMultiLineInsertion((line, i) => `${i + 1}. ${line}`)}\n`; break;
       case 'code': insertion = `\n\`\`\`javascript\n${selectedText || '// code here'}\n\`\`\`\n`; break;
+      case 'table': insertion = `\n| ${selectedText || 'Header'} | Header |\n| --- | --- |\n| Cell | Cell |\n`; break;
       case 'math': insertion = `\n$$\n${selectedText || 'E = mc^2'}\n$$\n`; break;
       case 'mermaid-graph': insertion = `\n\`\`\`mermaid\ngraph TD\n  A[Start] --> B[End]\n\`\`\`\n`; break;
+      case 'mermaid-sequence': insertion = `\n\`\`\`mermaid\nsequenceDiagram\n  Alice->>John: Hello John, how are you?\n  John-->>Alice: Great!\n\`\`\`\n`; break;
       default: return;
     }
 
@@ -229,6 +240,7 @@ export default function App() {
                   value={activeDoc.content} onChange={updateContent} 
                   onScroll={() => handleScroll('editor')} containerRef={editorContainerRef}
                   onEditorCreate={(v) => editorViewRef.current = v}
+                  onAction={handleToolbarAction}
                   isDark={document.documentElement.classList.contains('dark')}
                 />
               </motion.div>
