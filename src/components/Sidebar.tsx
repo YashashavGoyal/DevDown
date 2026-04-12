@@ -28,8 +28,8 @@ interface SidebarProps {
   onToggle: () => void;
   theme: 'light' | 'dark' | 'system';
   setTheme: (t: 'light' | 'dark' | 'system') => void;
-  palette: 'default' | 'velvet' | 'slate';
-  setPalette: (p: 'default' | 'velvet' | 'slate') => void;
+  palette: 'default' | 'velvet' | 'slate' | 'forest' | 'midnight';
+  setPalette: (p: 'default' | 'velvet' | 'slate' | 'forest' | 'midnight') => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -142,9 +142,11 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center justify-between px-2">
             <span className="text-[10px] uppercase tracking-widest font-bold opacity-50">Palette</span>
             <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
-               <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-50")}><Palette className="w-3.5 h-3.5 text-primary" /></button>
-               <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-50")}><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
-               <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-50")}><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
+               <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-primary" /></button>
+               <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
+               <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
+               <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
+               <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
             </div>
           </div>
         </div>

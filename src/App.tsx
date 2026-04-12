@@ -34,7 +34,10 @@ export default function App() {
   });
   const [activeId, setActiveId] = useState(documents[0].id);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
-  const [palette, setPalette] = useState<'default' | 'velvet' | 'slate'>('default');
+  const [palette, setPalette] = useState<'default' | 'velvet' | 'slate' | 'forest' | 'midnight'>(() => {
+    const saved = localStorage.getItem('devdown_palette');
+    return (saved as any) || 'default';
+  });
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'view'>('split');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -49,7 +52,8 @@ export default function App() {
   // Persistence
   useEffect(() => {
     localStorage.setItem('devdown_docs', JSON.stringify(documents));
-  }, [documents]);
+    localStorage.setItem('devdown_palette', palette);
+  }, [documents, palette]);
 
   // Theme logic
   useEffect(() => {
@@ -63,7 +67,7 @@ export default function App() {
       else root.classList.remove('dark');
       
       // Apply palette
-      root.classList.remove('theme-velvet', 'theme-slate');
+      root.classList.remove('theme-velvet', 'theme-slate', 'theme-forest', 'theme-midnight');
       if (palette !== 'default') root.classList.add(`theme-${palette}`);
     };
 
@@ -188,9 +192,11 @@ export default function App() {
           <div className="flex items-center gap-2">
             {/* Palette Switcher - Hidden on mobile */}
             <div className="hidden lg:flex items-center bg-muted/50 p-1 rounded-xl mr-2 border border-border/50 shadow-inner">
-               <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-50")} title="Standard"><Palette className="w-4 h-4 text-primary" /></button>
-               <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-50")} title="Velvet"><Palette className="w-4 h-4 text-[#e11d48]" /></button>
-               <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-50")} title="Slate"><Palette className="w-4 h-4 text-[#475569]" /></button>
+               <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-30")} title="Standard"><Palette className="w-3.5 h-3.5 text-primary" /></button>
+               <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-30")} title="Velvet"><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
+               <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")} title="Slate"><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
+               <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")} title="Forest"><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
+               <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")} title="Midnight"><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
             </div>
 
             <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
