@@ -4,12 +4,8 @@ import {
   Code, Table, SquareFunction, LayoutDashboard, 
   Type, Heading1, Heading2, Quote, GitMerge
 } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '../lib/utils';
+import { type LucideIcon } from 'lucide-react';
 
 export type MarkdownAction = 
   | 'bold' | 'italic' | 'heading1' | 'heading2' | 'quote' 
@@ -28,7 +24,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, className }) => {
     title, 
     active = false 
   }: { 
-    icon: any, 
+    icon: LucideIcon, 
     onClick: () => void, 
     title: string,
     active?: boolean

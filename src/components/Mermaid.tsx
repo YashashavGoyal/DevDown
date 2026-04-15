@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
+import { generateId } from '../lib/utils';
 
 // Initialize mermaid with default config
 mermaid.initialize({
@@ -25,7 +26,7 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
       try {
         setError(null);
         // Generate a unique ID for each chart
-        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+        const id = `mermaid-${generateId()}`;
         
         // Check if dark mode is active
         const isDarkMode = document.documentElement.classList.contains('dark');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -12,7 +12,13 @@ interface PreviewProps {
   onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }
 
-const CodeBlock = ({ children, className }: { children: any, className?: string }) => {
+interface CodeBlockProps {
+  children?: ReactNode;
+  className?: string;
+  [key: string]: any;
+}
+
+const CodeBlock = ({ children, className }: CodeBlockProps) => {
   const [copied, setCopied] = useState(false);
   const code = String(children).replace(/\n$/, '');
   const match = /language-(\w+)/.exec(className || '');
@@ -46,54 +52,56 @@ const CodeBlock = ({ children, className }: { children: any, className?: string 
   );
 };
 
+const MarkdownComponents = {
+  code: CodeBlock,
+  h1: ({ children }: { children?: ReactNode }) => <h1 className="text-4xl font-black mb-6 mt-10 tracking-tight">{children}</h1>,
+  h2: ({ children }: { children?: ReactNode }) => <h2 className="text-2xl font-bold mb-4 mt-8 pb-2 border-b border-border/50 tracking-tight">{children}</h2>,
+  table: ({ children }: { children?: ReactNode }) => (
+    <div className="overflow-x-auto my-6 rounded-2xl border border-border/50 glass-inset">
+      <table className="!m-0 w-full">{children}</table>
+    </div>
+  ),
+  blockquote: ({ children }: { children?: ReactNode }) => (
+    <blockquote className="border-l-4 border-primary/40 bg-primary/5 px-6 py-1 my-6 italic rounded-r-xl text-foreground/80">
+      {children}
+    </blockquote>
+  ),
+  a: ({ href, children }: { href?: string, children?: ReactNode }) => (
+    <a href={href} className="text-primary hover:underline font-medium decoration-primary/30 underline-offset-4 decoration-2" target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  ),
+  ul: ({ children }: { children?: ReactNode }) => (
+    <ul className="list-disc list-outside ml-6 my-4 space-y-2 text-foreground/90">
+      {children}
+    </ul>
+  ),
+  ol: ({ children }: { children?: ReactNode }) => (
+    <ol className="list-decimal list-outside ml-6 my-4 space-y-2 text-foreground/90">
+      {children}
+    </ol>
+  ),
+  li: ({ children }: { children?: ReactNode }) => (
+    <li className="pl-1 marker:text-primary transition-colors">
+      {children}
+    </li>
+  ),
+  p: ({ children }: { children?: ReactNode }) => <p className="my-4 text-foreground/90 leading-relaxed">{children}</p>,
+  h3: ({ children }: { children?: ReactNode }) => <h3 className="text-xl font-bold mb-3 mt-8 tracking-tight">{children}</h3>,
+  h4: ({ children }: { children?: ReactNode }) => <h4 className="text-lg font-bold mb-2 mt-6 tracking-tight">{children}</h4>,
+};
+
 const Preview: React.FC<PreviewProps> = ({ value, containerRef, onScroll }) => {
   return (
-    <div 
-      ref={containerRef as any}
+    <div
+      ref={containerRef}
       className="markdown-body h-full w-full overflow-y-auto px-8 py-12 sync-scroll-container custom-scrollbar"
       onScroll={onScroll}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex]}
-        components={{
-          code: CodeBlock as any,
-          h1: ({ children }) => <h1 className="text-4xl font-black mb-6 mt-10 tracking-tight">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-2xl font-bold mb-4 mt-8 pb-2 border-b border-border/50 tracking-tight">{children}</h2>,
-          table: ({ children }) => (
-            <div className="overflow-x-auto my-6 rounded-2xl border border-border/50 glass-inset">
-              <table className="!m-0 w-full">{children}</table>
-            </div>
-          ),
-          blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-primary/40 bg-primary/5 px-6 py-1 my-6 italic rounded-r-xl text-foreground/80">
-              {children}
-            </blockquote>
-          ),
-          a: ({ href, children }) => (
-            <a href={href} className="text-primary hover:underline font-medium decoration-primary/30 underline-offset-4 decoration-2" target="_blank" rel="noopener noreferrer">
-              {children}
-            </a>
-          ),
-          ul: ({ children }) => (
-            <ul className="list-disc list-outside ml-6 my-4 space-y-2 text-foreground/90">
-              {children}
-            </ul>
-          ),
-          ol: ({ children }) => (
-            <ol className="list-decimal list-outside ml-6 my-4 space-y-2 text-foreground/90">
-              {children}
-            </ol>
-          ),
-          li: ({ children }) => (
-            <li className="pl-1 marker:text-primary transition-colors">
-              {children}
-            </li>
-          ),
-          p: ({ children }) => <p className="my-4 text-foreground/90 leading-relaxed">{children}</p>,
-          h3: ({ children }) => <h3 className="text-xl font-bold mb-3 mt-8 tracking-tight">{children}</h3>,
-          h4: ({ children }) => <h4 className="text-lg font-bold mb-2 mt-6 tracking-tight">{children}</h4>,
-        }}
+        components={MarkdownComponents as any}
       >
         {value}
       </ReactMarkdown>

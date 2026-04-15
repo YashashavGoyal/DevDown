@@ -3,20 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Moon, Sun, Monitor, Eye, Edit3, 
   Share2, Menu, Command as CommandIcon,
-  Palette, Smartphone, Info
+  Palette, Smartphone, Info, Check
 } from 'lucide-react';
 import Editor from './components/Editor';
 import Preview from './components/Preview';
 import Sidebar, { type Document } from './components/Sidebar';
 import Toolbar, { type MarkdownAction } from './components/Toolbar';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { EditorView } from '@codemirror/view';
-
-// Helper for tailwind classes
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn, generateId } from './lib/utils';
 
 const DEFAULT_DOCS: Document[] = [
   {
@@ -29,8 +23,13 @@ const DEFAULT_DOCS: Document[] = [
 
 export default function App() {
   const [documents, setDocuments] = useState<Document[]>(() => {
-    const saved = localStorage.getItem('devdown_docs');
-    return saved ? JSON.parse(saved) : DEFAULT_DOCS;
+    try {
+      const saved = localStorage.getItem('devdown_docs');
+      return saved ? JSON.parse(saved) : DEFAULT_DOCS;
+    } catch (err) {
+      console.error('Failed to parse documents from localStorage:', err);
+      return DEFAULT_DOCS;
+    }
   });
   const [activeId, setActiveId] = useState(documents[0].id);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
@@ -41,6 +40,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'view'>('split');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -138,7 +138,7 @@ export default function App() {
 
   const createNewDoc = () => {
     const newDoc: Document = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: generateId(),
       title: 'New Note',
       content: '# New Note\nStart writing...',
       updatedAt: Date.now()
@@ -149,9 +149,20 @@ export default function App() {
 
   const deleteDoc = (id: string) => {
     if (documents.length === 1) return;
-    const nextDocs = documents.filter(d => d.id !== id);
-    setDocuments(nextDocs);
-    if (activeId === id) setActiveId(nextDocs[0].id);
+    const docToDelete = documents.find(d => d.id === id);
+    if (!docToDelete) return;
+
+    if (window.confirm(`Are you sure you want to delete "${docToDelete.title}"?`)) {
+      const nextDocs = documents.filter(d => d.id !== id);
+      setDocuments(nextDocs);
+      if (activeId === id) setActiveId(nextDocs[0].id);
+    }
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(activeDoc.content);
+    setIsSharing(true);
+    setTimeout(() => setIsSharing(false), 2000);
   };
 
   if (!mounted) return null;
@@ -216,8 +227,17 @@ export default function App() {
               <button onClick={() => setTheme('system')} className={cn("p-2 rounded-lg transition-all", theme === 'system' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Monitor className="w-3.5 h-3.5" /></button>
             </div>
             
-            <button className="p-2.5 bg-primary text-primary-foreground rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all ml-1 hidden lg:block">
-              <Share2 className="w-4 h-4" />
+            <button 
+              onClick={handleShare}
+              className={cn(
+                "p-2.5 rounded-xl shadow-lg transition-all ml-1 hidden lg:block",
+                isSharing 
+                  ? "bg-green-500 text-white shadow-green-500/20" 
+                  : "bg-primary text-primary-foreground shadow-primary/20 hover:scale-105 active:scale-95"
+              )}
+              title="Copy link to clipboard"
+            >
+              {isSharing ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
             </button>
           </div>
         </header>

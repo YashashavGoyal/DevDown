@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -15,15 +15,49 @@ interface EditorProps {
   onAction?: (action: MarkdownAction) => void;
 }
 
+import { cn } from '../lib/utils';
+
 const Editor: React.FC<EditorProps> = ({ value, onChange, onScroll, containerRef, isDark, onEditorCreate, onAction }) => {
+  const extensions = useMemo(() => [
+    markdown({ codeLanguages: languages }),
+    EditorView.lineWrapping,
+    EditorView.theme({
+      "&": {
+        height: "100%",
+        backgroundColor: "transparent !important",
+      },
+      ".cm-scroller": {
+        overflow: "auto",
+        backgroundColor: "transparent !important",
+        padding: "2rem",
+      },
+      ".cm-content": {
+        padding: "0",
+      },
+      ".cm-gutters": {
+        backgroundColor: "transparent !important",
+        border: "none",
+        color: "hsl(var(--muted-foreground))",
+        opacity: 0.5,
+      }
+    }),
+    keymap.of([
+      { key: "Mod-b", run: () => { onAction?.('bold'); return true; } },
+      { key: "Mod-i", run: () => { onAction?.('italic'); return true; } },
+      { key: "Mod-k", run: () => { onAction?.('link'); return true; } },
+      { key: "Mod-Shift-k", run: () => { onAction?.('code'); return true; } },
+      { key: "Mod-q", run: () => { onAction?.('quote'); return true; } },
+    ])
+  ], [onAction]);
+
   const handleChange = useCallback((val: string) => {
     onChange(val);
   }, [onChange]);
 
   return (
     <div 
-      ref={containerRef as any}
-      className="h-full w-full overflow-hidden"
+      ref={containerRef}
+      className={cn("h-full w-full overflow-hidden")}
       onScroll={onScroll}
     >
       <CodeMirror
@@ -31,37 +65,7 @@ const Editor: React.FC<EditorProps> = ({ value, onChange, onScroll, containerRef
         height="100%"
         theme={isDark ? 'dark' : 'light'}
         onCreateEditor={onEditorCreate}
-        extensions={[
-          markdown({ codeLanguages: languages }),
-          EditorView.lineWrapping,
-          EditorView.theme({
-            "&": {
-              height: "100%",
-              backgroundColor: "transparent !important",
-            },
-            ".cm-scroller": {
-              overflow: "auto",
-              backgroundColor: "transparent !important",
-              padding: "2rem",
-            },
-            ".cm-content": {
-              padding: "0",
-            },
-            ".cm-gutters": {
-              backgroundColor: "transparent !important",
-              border: "none",
-              color: "hsl(var(--muted-foreground))",
-              opacity: 0.5,
-            }
-          }),
-          keymap.of([
-            { key: "Mod-b", run: () => { onAction?.('bold'); return true; } },
-            { key: "Mod-i", run: () => { onAction?.('italic'); return true; } },
-            { key: "Mod-k", run: () => { onAction?.('link'); return true; } },
-            { key: "Mod-Shift-k", run: () => { onAction?.('code'); return true; } },
-            { key: "Mod-q", run: () => { onAction?.('quote'); return true; } },
-          ])
-        ]}
+        extensions={extensions}
         onChange={handleChange}
         basicSetup={{
           lineNumbers: true,
