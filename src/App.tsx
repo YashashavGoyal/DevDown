@@ -11,6 +11,10 @@ import Sidebar, { type Document } from './components/Sidebar';
 import Toolbar, { type MarkdownAction } from './components/Toolbar';
 import { EditorView } from '@codemirror/view';
 import { cn, generateId } from './lib/utils';
+import { useSettings } from './hooks/useSettings';
+import SettingsModal from './components/SettingsModal';
+import QuickOpen from './components/QuickOpen';
+import { type SidebarHandle } from './components/Sidebar';
 
 const DEFAULT_DOCS: Document[] = [
   {
@@ -41,10 +45,15 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isQuickOpenOpen, setIsQuickOpenOpen] = useState(false);
+
+  const { settings, updateSettings, resetSettings } = useSettings();
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
+  const sidebarRef = useRef<SidebarHandle>(null);
   const isScrolling = useRef<string | null>(null);
 
   const activeDoc = documents.find(d => d.id === activeId) || documents[0];
@@ -90,6 +99,33 @@ export default function App() {
     }
     setTimeout(() => { isScrolling.current = null; }, 50);
   }, []);
+
+  // Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = (navigator.platform.includes('Mac') ? e.metaKey : e.ctrlKey);
+
+      if (e.key === 'Escape') {
+        if (isSettingsOpen) setIsSettingsOpen(false);
+        if (isQuickOpenOpen) setIsQuickOpenOpen(false);
+        if (settings.zenMode) updateSettings({ zenMode: false });
+      }
+
+      if (isMod && (e.key === '/' || e.key === 'f')) {
+        e.preventDefault();
+        setIsSidebarOpen(true);
+        setTimeout(() => sidebarRef.current?.focusSearch(), 100);
+      }
+
+      if (isMod && e.key === 'p') {
+        e.preventDefault();
+        setIsQuickOpenOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSettingsOpen, isQuickOpenOpen, settings.zenMode, updateSettings]);
 
   // Editor Actions
   const handleToolbarAction = (action: MarkdownAction) => {
@@ -147,6 +183,11 @@ export default function App() {
     setActiveId(newDoc.id);
   };
 
+  const importDocuments = (docs: Document[]) => {
+    setDocuments(prev => [...docs, ...prev]);
+    if (docs[0]) setActiveId(docs[0].id);
+  };
+
   const deleteDoc = (id: string) => {
     if (documents.length === 1) return;
     const docToDelete = documents.find(d => d.id === id);
@@ -181,71 +222,80 @@ export default function App() {
       </AnimatePresence>
 
       <Sidebar 
+        ref={sidebarRef}
         documents={documents} activeId={activeId} onSelect={setActiveId}
-        onNew={createNewDoc} onDelete={deleteDoc} isOpen={isSidebarOpen}
+        onNew={createNewDoc} onDelete={deleteDoc} isOpen={isSidebarOpen && !settings.zenMode}
         onToggle={() => setIsSidebarOpen(false)}
         theme={theme} setTheme={setTheme}
         palette={palette} setPalette={setPalette}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden">
-        {/* Header */}
-        <header className="h-[var(--header-height)] flex items-center justify-between px-6 border-b border-border/50 glass z-20 shrink-0">
-          <div className="flex items-center gap-4 min-w-0">
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-muted rounded-xl transition-colors shrink-0"
-              title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="flex flex-col min-w-0">
-              <input 
-                value={activeDoc.title}
-                onChange={(e) => setDocuments(docs => docs.map(d => d.id === activeId ? { ...d, title: e.target.value } : d))}
-                className="bg-transparent border-none text-lg font-bold outline-none focus:text-primary transition-colors truncate max-w-[200px] md:max-w-[400px]"
-              />
-              <span className="text-[10px] text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                <Info className="w-3 h-3" /> Autosaved to LocalStorage
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Palette Switcher - Hidden on mobile */}
-            <div className="hidden lg:flex items-center bg-muted/50 p-1 rounded-xl mr-2 border border-border/50 shadow-inner">
-               <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-30")} title="Standard"><Palette className="w-3.5 h-3.5 text-primary" /></button>
-               <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-30")} title="Velvet"><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
-               <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")} title="Slate"><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
-               <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")} title="Forest"><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
-               <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")} title="Midnight"><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
+      <div className={cn(
+        "flex-1 flex flex-col min-w-0 relative h-full overflow-hidden transition-all duration-500",
+        settings.zenMode ? "bg-card" : "bg-background"
+      )}>
+        {/* Header - Hidden in Zen Mode unless explicitly required */}
+        {!settings.zenMode && (
+          <header className="h-[var(--header-height)] flex items-center justify-between px-6 border-b border-border/50 glass z-20 shrink-0">
+            <div className="flex items-center gap-4 min-w-0">
+              <button 
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="p-2 hover:bg-muted rounded-xl transition-colors shrink-0"
+                title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex flex-col min-w-0">
+                <input 
+                  value={activeDoc.title}
+                  onChange={(e) => setDocuments(docs => docs.map(d => d.id === activeId ? { ...d, title: e.target.value } : d))}
+                  className="bg-transparent border-none text-lg font-bold outline-none focus:text-primary transition-colors truncate max-w-[200px] md:max-w-[400px]"
+                />
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                  <Info className="w-3 h-3" /> Autosaved to LocalStorage
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
-              <button onClick={() => setTheme('light')} className={cn("p-2 rounded-lg transition-all", theme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Sun className="w-3.5 h-3.5" /></button>
-              <button onClick={() => setTheme('dark')} className={cn("p-2 rounded-lg transition-all", theme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Moon className="w-3.5 h-3.5" /></button>
-              <button onClick={() => setTheme('system')} className={cn("p-2 rounded-lg transition-all", theme === 'system' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Monitor className="w-3.5 h-3.5" /></button>
-            </div>
-            
-            <button 
-              onClick={handleShare}
-              className={cn(
-                "p-2.5 rounded-xl shadow-lg transition-all ml-1 hidden lg:block",
-                isSharing 
-                  ? "bg-green-500 text-white shadow-green-500/20" 
-                  : "bg-primary text-primary-foreground shadow-primary/20 hover:scale-105 active:scale-95"
-              )}
-              title="Copy link to clipboard"
-            >
-              {isSharing ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-            </button>
-          </div>
-        </header>
+            <div className="flex items-center gap-2">
+              <div className="hidden lg:flex items-center bg-muted/50 p-1 rounded-xl mr-2 border border-border/50 shadow-inner">
+                 <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-30")} title="Standard"><Palette className="w-3.5 h-3.5 text-primary" /></button>
+                 <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-30")} title="Velvet"><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
+                 <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")} title="Slate"><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
+                 <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")} title="Forest"><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
+                 <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")} title="Midnight"><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
+              </div>
 
-        {/* Toolbar */}
+              <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
+                <button onClick={() => setTheme('light')} className={cn("p-2 rounded-lg transition-all", theme === 'light' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Sun className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setTheme('dark')} className={cn("p-2 rounded-lg transition-all", theme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Moon className="w-3.5 h-3.5" /></button>
+                <button onClick={() => setTheme('system')} className={cn("p-2 rounded-lg transition-all", theme === 'system' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Monitor className="w-3.5 h-3.5" /></button>
+              </div>
+              
+              <button 
+                onClick={handleShare}
+                className={cn(
+                  "p-2.5 rounded-xl shadow-lg transition-all ml-1 hidden lg:block",
+                  isSharing 
+                    ? "bg-green-500 text-white shadow-green-500/20" 
+                    : "bg-primary text-primary-foreground shadow-primary/20 hover:scale-105 active:scale-95"
+                )}
+                title="Copy link to clipboard"
+              >
+                {isSharing ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              </button>
+            </div>
+          </header>
+        )}
+
+        {/* Toolbar - Customizable visibility in Zen Mode */}
         <Toolbar 
           onAction={handleToolbarAction} 
-          className={cn(viewMode === 'view' && "hidden lg:flex")}
+          className={cn(
+            (viewMode === 'view' && "hidden lg:flex"),
+            (settings.zenMode && !settings.showToolbarInZen) && "hidden"
+          )}
         />
 
         {/* Editor & Preview */}
@@ -262,6 +312,9 @@ export default function App() {
                   onEditorCreate={(v) => editorViewRef.current = v}
                   onAction={handleToolbarAction}
                   isDark={document.documentElement.classList.contains('dark')}
+                  fontSize={settings.fontSize}
+                  lineNumbers={settings.lineNumbers}
+                  lineWrapping={settings.lineWrapping}
                 />
               </motion.div>
             )}
@@ -269,7 +322,11 @@ export default function App() {
             {(viewMode === 'split' || viewMode === 'view') && (
               <motion.div 
                 key="preview-pane" initial={{ flex: 0, opacity: 0 }} animate={{ flex: viewMode === 'split' ? 1 : 2, opacity: 1 }} exit={{ flex: 0, opacity: 0 }}
-                className={cn("h-full transition-all duration-500 overflow-hidden", viewMode === 'split' ? "w-full lg:w-1/2" : "w-full")}
+                className={cn(
+                  "h-full transition-all duration-500 overflow-hidden", 
+                  viewMode === 'split' ? "w-full lg:w-1/2" : "w-full",
+                  settings.zenMode && "px-10 py-6"
+                )}
               >
                 <Preview value={activeDoc.content} containerRef={previewContainerRef} onScroll={() => handleScroll('preview')} />
               </motion.div>
@@ -277,25 +334,40 @@ export default function App() {
           </AnimatePresence>
 
           {/* Floating Mobile Toggle */}
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-foreground/10 backdrop-blur-xl p-1.5 rounded-full border border-white/20 shadow-2xl z-40 lg:hidden">
-            <button onClick={() => setViewMode('edit')} className={cn("px-6 py-2.5 rounded-full transition-all flex items-center gap-2", viewMode === 'edit' ? "bg-primary text-primary-foreground shadow-lg" : "text-foreground/70")}><Edit3 className="w-4 h-4" /> Edit</button>
-            <button onClick={() => setViewMode('view')} className={cn("px-6 py-2.5 rounded-full transition-all flex items-center gap-2", viewMode === 'view' ? "bg-primary text-primary-foreground shadow-lg" : "text-foreground/70")}><Eye className="w-4 h-4" /> View</button>
-          </div>
+          {!settings.zenMode && (
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center bg-foreground/10 backdrop-blur-xl p-1.5 rounded-full border border-white/20 shadow-2xl z-40 lg:hidden">
+              <button onClick={() => setViewMode('edit')} className={cn("px-6 py-2.5 rounded-full transition-all flex items-center gap-2", viewMode === 'edit' ? "bg-primary text-primary-foreground shadow-lg" : "text-foreground/70")}><Edit3 className="w-4 h-4" /> Edit</button>
+              <button onClick={() => setViewMode('view')} className={cn("px-6 py-2.5 rounded-full transition-all flex items-center gap-2", viewMode === 'view' ? "bg-primary text-primary-foreground shadow-lg" : "text-foreground/70")}><Eye className="w-4 h-4" /> View</button>
+            </div>
+          )}
         </main>
 
         {/* Status Bar */}
-        <footer className="h-8 shrink-0 flex items-center justify-between px-6 bg-muted/30 border-t border-border/50 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1.5"><CommandIcon className="w-3 h-3" /> UTF-8</span>
-            <span>{activeDoc.content.length} Characters</span>
-            <span>{activeDoc.content.split(/\s+/).filter(Boolean).length} Words</span>
-          </div>
-          <div className="flex items-center gap-4">
-             <span className="flex items-center gap-1.5 hidden sm:flex"><Smartphone className="w-3 h-3" /> Responsive Mode</span>
-             <span className="text-primary font-bold">● Live Sync</span>
-          </div>
-        </footer>
+        {!settings.zenMode && (
+          <footer className="h-8 shrink-0 flex items-center justify-between px-6 bg-muted/30 border-t border-border/50 text-[10px] uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center gap-6">
+              <span className="flex items-center gap-1.5"><CommandIcon className="w-3 h-3" /> UTF-8</span>
+              <span>{activeDoc.content.length} Characters</span>
+              <span>{activeDoc.content.split(/\s+/).filter(Boolean).length} Words</span>
+            </div>
+            <div className="flex items-center gap-4">
+               <span className="flex items-center gap-1.5 hidden sm:flex"><Smartphone className="w-3 h-3" /> Responsive Mode</span>
+               <span className="text-primary font-bold">● Live Sync</span>
+            </div>
+          </footer>
+        )}
       </div>
+
+      <SettingsModal 
+        isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
+        settings={settings} updateSettings={updateSettings} resetSettings={resetSettings}
+        documents={documents} onImport={importDocuments}
+      />
+
+      <QuickOpen 
+        isOpen={isQuickOpenOpen} onClose={() => setIsQuickOpenOpen(false)}
+        documents={documents} onSelect={(id) => { setActiveId(id); setIsQuickOpenOpen(false); }}
+      />
     </div>
   );
 }

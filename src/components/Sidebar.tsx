@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { 
   FileText, Plus, Search, Trash2, 
   Settings, Zap, Layout, X, Palette, 
@@ -25,9 +25,14 @@ interface SidebarProps {
   setTheme: (t: 'light' | 'dark' | 'system') => void;
   palette: 'default' | 'velvet' | 'slate' | 'forest' | 'midnight';
   setPalette: (p: 'default' | 'velvet' | 'slate' | 'forest' | 'midnight') => void;
+  onOpenSettings: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
+export interface SidebarHandle {
+  focusSearch: () => void;
+}
+
+const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({ 
   documents, 
   activeId, 
   onSelect, 
@@ -38,9 +43,17 @@ const Sidebar: React.FC<SidebarProps> = ({
   theme,
   setTheme,
   palette,
-  setPalette
-}) => {
+  setPalette,
+  onOpenSettings
+}, ref) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focusSearch: () => {
+      searchInputRef.current?.focus();
+    }
+  }));
 
   const filteredDocuments = documents.filter(doc => 
     doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -86,6 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
           <input 
+            ref={searchInputRef}
             type="text" 
             placeholder="Search notes..." 
             value={searchQuery}
@@ -167,11 +181,14 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Zap className="w-4 h-4 text-amber-500 fill-amber-500/20" />
             <span className="text-xs font-medium">Pro Account</span>
           </div>
-          <Settings className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
+          <Settings 
+            onClick={onOpenSettings}
+            className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors" 
+          />
         </div>
       </div>
     </aside>
   );
-};
+});
 
 export default Sidebar;

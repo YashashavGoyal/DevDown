@@ -45,6 +45,8 @@
   --radius: 0.75rem;
   --header-height: 72px;
   --toolbar-height: 48px;
+  --app-font-size: 16px;
+  --app-font-family: Inter, system-ui, sans-serif;
 }
 
 @media (max-width: 768px) {
@@ -122,6 +124,8 @@
 .markdown-body {
   background-color: transparent !important;
   color: hsl(var(--foreground)) !important;
+  font-size: var(--app-font-size) !important;
+  font-family: var(--app-font-family) !important;
 }
 
 .cm-editor {
