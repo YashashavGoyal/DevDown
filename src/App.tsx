@@ -37,6 +37,7 @@ export default function App() {
   });
   const [activeId, setActiveId] = useState(documents[0].id);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [isEditorDark, setIsEditorDark] = useState(false);
   const [palette, setPalette] = useState<'default' | 'velvet' | 'slate' | 'forest' | 'midnight'>(() => {
     const saved = localStorage.getItem('devdown_palette');
     return (saved as any) || 'default';
@@ -74,6 +75,7 @@ export default function App() {
       const isDark = theme === 'dark' || (theme === 'system' && mediaQuery.matches);
       if (isDark) root.classList.add('dark');
       else root.classList.remove('dark');
+      setIsEditorDark(isDark);
       
       // Apply palette
       root.classList.remove('theme-velvet', 'theme-slate', 'theme-forest', 'theme-midnight');
@@ -128,7 +130,7 @@ export default function App() {
   }, [isSettingsOpen, isQuickOpenOpen, settings.zenMode, updateSettings]);
 
   // Editor Actions
-  const handleToolbarAction = (action: MarkdownAction) => {
+  const handleToolbarAction = useCallback((action: MarkdownAction) => {
     if (!editorViewRef.current) return;
     const view = editorViewRef.current;
     const { from, to } = view.state.selection.main;
@@ -166,11 +168,11 @@ export default function App() {
       selection: { anchor: from + insertion.length }
     });
     view.focus();
-  };
+  }, []);
 
-  const updateContent = (val: string) => {
+  const updateContent = useCallback((val: string) => {
     setDocuments(docs => docs.map(d => d.id === activeId ? { ...d, content: val, updatedAt: Date.now() } : d));
-  };
+  }, [activeId]);
 
   const createNewDoc = () => {
     const newDoc: Document = {
@@ -335,7 +337,7 @@ export default function App() {
                   onScroll={() => handleScroll('editor')} containerRef={editorContainerRef}
                   onEditorCreate={(v) => editorViewRef.current = v}
                   onAction={handleToolbarAction}
-                  isDark={document.documentElement.classList.contains('dark')}
+                  isDark={isEditorDark}
                   fontSize={settings.fontSize}
                   lineNumbers={settings.lineNumbers}
                   lineWrapping={settings.lineWrapping}

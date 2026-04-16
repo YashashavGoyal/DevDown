@@ -26,7 +26,7 @@ const Editor: React.FC<EditorProps> = ({
   fontSize, lineNumbers, lineWrapping
 }) => {
   const extensions = useMemo(() => {
-    const list = [
+    const list: any[] = [
       markdown({ codeLanguages: languages }),
       EditorView.theme({
         "&": {
@@ -41,6 +41,7 @@ const Editor: React.FC<EditorProps> = ({
         },
         ".cm-content": {
           padding: "0",
+          color: "inherit", // Ensure we don't force a single color
         },
         ".cm-gutters": {
           backgroundColor: "transparent !important",
@@ -62,7 +63,8 @@ const Editor: React.FC<EditorProps> = ({
     if (lineWrapping) list.push(EditorView.lineWrapping);
     
     return list;
-  }, [onAction, fontSize, lineNumbers, lineWrapping]);
+  }, [fontSize, lineNumbers, lineWrapping, onAction]);
+// Note: onAction is now memoized in App.tsx, so this won't trigger on every keystroke.
 
   const handleChange = useCallback((val: string) => {
     onChange(val);
