@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Moon, Sun, Monitor, Eye, Edit3, 
   Share2, Menu, Command as CommandIcon,
-  Palette, Smartphone, Info, Check
+  Palette, Smartphone, Info, Check, Columns
 } from 'lucide-react';
 import Editor from './components/Editor';
 import Preview from './components/Preview';
@@ -265,6 +265,30 @@ export default function App() {
                  <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")} title="Slate"><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
                  <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")} title="Forest"><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
                  <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")} title="Midnight"><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
+              </div>
+
+              <div className="hidden lg:flex items-center bg-muted/50 p-1 rounded-xl border border-border/50 shadow-inner">
+                <button 
+                  onClick={() => setViewMode('edit')} 
+                  className={cn("p-1.5 rounded-lg transition-all", viewMode === 'edit' ? "bg-background shadow-sm text-primary" : "text-muted-foreground opacity-50")}
+                  title="Editor Only"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  onClick={() => setViewMode('split')} 
+                  className={cn("p-1.5 rounded-lg transition-all", viewMode === 'split' ? "bg-background shadow-sm text-primary" : "text-muted-foreground opacity-50")}
+                  title="Split View"
+                >
+                  <Columns className="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  onClick={() => setViewMode('view')} 
+                  className={cn("p-1.5 rounded-lg transition-all", viewMode === 'view' ? "bg-background shadow-sm text-primary" : "text-muted-foreground opacity-50")}
+                  title="Preview Only"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
               </div>
 
               <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
