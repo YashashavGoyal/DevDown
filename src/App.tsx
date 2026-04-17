@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Moon, Sun, Monitor, Eye, Edit3,
   Share2, Menu, Command as CommandIcon,
-  Palette, Smartphone, Info, Check, Columns
+  Palette, Smartphone, Check, Columns
 } from 'lucide-react';
 import Editor from './components/Editor';
 import Preview from './components/Preview';
@@ -52,7 +52,7 @@ export default function App() {
     }
   });
   const [activeId, setActiveId] = useState(documents[0].id);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
   const [isEditorDark, setIsEditorDark] = useState(false);
   const [palette, setPalette] = useState<'default' | 'velvet' | 'slate' | 'forest' | 'midnight'>(() => {
     const saved = localStorage.getItem('devdown_palette');
@@ -223,7 +223,7 @@ export default function App() {
         const children = folders.filter(f => f.parentId === fid);
         return [fid, ...children.flatMap(f => getAllChildFolderIds(f.id))];
       };
-      
+
       const idsToDelete = getAllChildFolderIds(id);
       setDocuments(docs => docs.filter(d => !d.folderId || !idsToDelete.includes(d.folderId)));
       setFolders(fs => fs.filter(f => !idsToDelete.includes(f.id)));
@@ -231,7 +231,7 @@ export default function App() {
       // Move documents and subfolders to parent's level or root
       const folder = folders.find(f => f.id === id);
       const parentId = folder?.parentId || null;
-      
+
       setDocuments(docs => docs.map(d => d.folderId === id ? { ...d, folderId: parentId } : d));
       setFolders(fs => fs.map(f => f.parentId === id ? { ...f, parentId } : f).filter(f => f.id !== id));
     }
@@ -248,7 +248,7 @@ export default function App() {
   const moveFolderToFolder = (folderId: string, targetParentId: string | null) => {
     // Avoid moving a folder into itself
     if (folderId === targetParentId) return;
-    
+
     // Avoid moving a parent into its own child (circular dependency check)
     const isChildOf = (fId: string, potentialParentId: string): boolean => {
       const folder = folders.find(f => f.id === potentialParentId);
@@ -258,8 +258,8 @@ export default function App() {
     };
 
     if (targetParentId && isChildOf(folderId, targetParentId)) {
-        // Option: Swap, or just ignore. Let's ignore for safety.
-        return;
+      // Option: Swap, or just ignore. Let's ignore for safety.
+      return;
     }
 
     setFolders(fs => fs.map(f => f.id === folderId ? { ...f, parentId: targetParentId } : f));
@@ -289,7 +289,7 @@ export default function App() {
     setFolderToDelete(null);
     setDeleteContentsChecked(false);
   };
-  
+
   const getBreadcrumbs = () => {
     const items: { id: string; name: string; isFolder: boolean; }[] = [];
     if (!activeDoc) return items;
@@ -555,9 +555,9 @@ export default function App() {
             danger
           >
             <label className="flex items-center gap-2 cursor-pointer group mt-4">
-              <input 
-                type="checkbox" 
-                checked={deleteContentsChecked} 
+              <input
+                type="checkbox"
+                checked={deleteContentsChecked}
                 onChange={(e) => setDeleteContentsChecked(e.target.checked)}
                 className="w-4 h-4 rounded border-border bg-muted text-primary focus:ring-primary/30"
               />
