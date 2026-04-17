@@ -3,6 +3,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { EditorView, keymap } from '@codemirror/view';
+import { EditorState } from '@codemirror/state';
 import { type MarkdownAction } from './Toolbar';
 
 interface EditorProps {
@@ -41,7 +42,8 @@ const Editor: React.FC<EditorProps> = ({
         },
         ".cm-content": {
           padding: "0",
-          color: "inherit", // Ensure we don't force a single color
+          color: "inherit",
+          tabSize: 4,
         },
         ".cm-gutters": {
           backgroundColor: "transparent !important",
@@ -51,6 +53,7 @@ const Editor: React.FC<EditorProps> = ({
           display: lineNumbers ? "flex" : "none",
         }
       }),
+      EditorState.tabSize.of(4),
       keymap.of([
         { key: "Mod-b", run: () => { onAction?.('bold'); return true; } },
         { key: "Mod-i", run: () => { onAction?.('italic'); return true; } },
