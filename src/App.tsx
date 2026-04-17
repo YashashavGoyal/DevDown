@@ -14,6 +14,7 @@ import { cn, generateId } from './lib/utils';
 import { useSettings } from './hooks/useSettings';
 import SettingsModal from './components/SettingsModal';
 import QuickOpen from './components/QuickOpen';
+import ConfirmModal from './components/ConfirmModal';
 import { type SidebarHandle } from './components/Sidebar';
 
 const DEFAULT_DOCS: Document[] = [
@@ -48,6 +49,7 @@ export default function App() {
   const [isSharing, setIsSharing] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isQuickOpenOpen, setIsQuickOpenOpen] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<string | null>(null);
 
   const { settings, updateSettings, resetSettings } = useSettings();
 
@@ -55,6 +57,7 @@ export default function App() {
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const editorViewRef = useRef<EditorView | null>(null);
   const sidebarRef = useRef<SidebarHandle>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isScrolling = useRef<string | null>(null);
 
   const activeDoc = documents.find(d => d.id === activeId) || documents[0];
@@ -192,14 +195,40 @@ export default function App() {
 
   const deleteDoc = (id: string) => {
     if (documents.length === 1) return;
-    const docToDelete = documents.find(d => d.id === id);
-    if (!docToDelete) return;
+    setDocToDelete(id);
+  };
 
-    if (window.confirm(`Are you sure you want to delete "${docToDelete.title}"?`)) {
-      const nextDocs = documents.filter(d => d.id !== id);
-      setDocuments(nextDocs);
-      if (activeId === id) setActiveId(nextDocs[0].id);
-    }
+  const handleConfirmDelete = () => {
+    if (!docToDelete) return;
+    const nextDocs = documents.filter(d => d.id !== docToDelete);
+    setDocuments(nextDocs);
+    if (activeId === docToDelete) setActiveId(nextDocs[0].id);
+    setDocToDelete(null);
+  };
+  
+  const handleOpenFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const newDocs: Document[] = await Promise.all(
+      files.map(async (file) => {
+        const content = await file.text();
+        return {
+          id: generateId(),
+          title: file.name.replace(/\.md$/i, ''),
+          content,
+          updatedAt: Date.now()
+        };
+      })
+    );
+
+    importDocuments(newDocs);
+    // Reset input so the same file can be opened again if needed
+    e.target.value = '';
   };
 
   const handleShare = () => {
@@ -227,6 +256,7 @@ export default function App() {
         ref={sidebarRef}
         documents={documents} activeId={activeId} onSelect={setActiveId}
         onNew={createNewDoc} onDelete={deleteDoc} isOpen={isSidebarOpen && !settings.zenMode}
+        onOpenFile={handleOpenFile}
         onToggle={() => setIsSidebarOpen(false)}
         theme={theme} setTheme={setTheme}
         palette={palette} setPalette={setPalette}
@@ -393,6 +423,28 @@ export default function App() {
       <QuickOpen 
         isOpen={isQuickOpenOpen} onClose={() => setIsQuickOpenOpen(false)}
         documents={documents} onSelect={(id) => { setActiveId(id); setIsQuickOpenOpen(false); }}
+      />
+
+      <AnimatePresence>
+        {docToDelete && (
+          <ConfirmModal 
+            title="Delete Note?"
+            description={`Are you sure you want to delete "${documents.find(d => d.id === docToDelete)?.title || 'this note'}"? This action cannot be undone.`}
+            confirmLabel="Delete"
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setDocToDelete(null)}
+            danger
+          />
+        )}
+      </AnimatePresence>
+
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileInputChange} 
+        accept=".md" 
+        multiple 
+        className="hidden" 
       />
     </div>
   );

@@ -1,8 +1,8 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
-import { 
-  FileText, Plus, Search, Trash2, 
-  Settings, Zap, Layout, X, Palette, 
-  Sun, Moon, Monitor
+import { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import {
+  FileText, Plus, Search, Trash2,
+  Settings, Zap, Layout, X, Palette,
+  Sun, Moon, Monitor, FolderOpen
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -18,6 +18,7 @@ interface SidebarProps {
   activeId: string;
   onSelect: (id: string) => void;
   onNew: () => void;
+  onOpenFile: () => void;
   onDelete: (id: string) => void;
   isOpen: boolean;
   onToggle: () => void;
@@ -32,11 +33,12 @@ export interface SidebarHandle {
   focusSearch: () => void;
 }
 
-const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({ 
-  documents, 
-  activeId, 
-  onSelect, 
-  onNew, 
+const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
+  documents,
+  activeId,
+  onSelect,
+  onNew,
+  onOpenFile,
   onDelete,
   isOpen,
   onToggle,
@@ -55,7 +57,7 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
     }
   }));
 
-  const filteredDocuments = documents.filter(doc => 
+  const filteredDocuments = documents.filter(doc =>
     doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     doc.content.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -65,8 +67,8 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
       "h-full flex flex-col transition-all duration-300 ease-in-out z-[100] overflow-hidden",
       "lg:relative fixed inset-y-0 left-0",
       "lg:bg-background bg-background border-r border-border shadow-xl lg:shadow-none",
-      isOpen 
-        ? "w-[var(--sidebar-width)] translate-x-0 opacity-100 visible" 
+      isOpen
+        ? "w-[var(--sidebar-width)] translate-x-0 opacity-100 visible"
         : "w-0 -translate-x-full opacity-0 invisible"
     )}>
       {/* Sidebar Header */}
@@ -78,14 +80,21 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
           <span className="font-bold tracking-tight">Docs</span>
         </div>
         <div className="flex items-center gap-1">
-          <button 
+          <button
             onClick={onNew}
             className="p-1.5 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-colors"
             title="New Document"
           >
             <Plus className="w-4 h-4" />
           </button>
-          <button 
+          <button
+            onClick={onOpenFile}
+            className="p-1.5 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-colors"
+            title="Open MD File"
+          >
+            <FolderOpen className="w-4 h-4" />
+          </button>
+          <button
             onClick={onToggle}
             className="lg:hidden p-1.5 hover:bg-muted text-muted-foreground rounded-lg"
           >
@@ -98,10 +107,10 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
       <div className="p-4">
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-          <input 
+          <input
             ref={searchInputRef}
-            type="text" 
-            placeholder="Search notes..." 
+            type="text"
+            placeholder="Search notes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-muted/40 border-none rounded-xl py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/30 outline-none transition-all"
@@ -113,8 +122,8 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
       <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar">
         {filteredDocuments.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full opacity-40 py-10 text-center px-4">
-             <Search className="w-8 h-8 mb-2" />
-             <p className="text-xs font-medium">No results found for "{searchQuery}"</p>
+            <Search className="w-8 h-8 mb-2" />
+            <p className="text-xs font-medium">No results found for "{searchQuery}"</p>
           </div>
         ) : (
           filteredDocuments.map((doc) => (
@@ -123,8 +132,8 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
               onClick={() => onSelect(doc.id)}
               className={cn(
                 "group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 border border-transparent",
-                activeId === doc.id 
-                  ? "bg-primary/10 text-primary border-primary/20 shadow-sm" 
+                activeId === doc.id
+                  ? "bg-primary/10 text-primary border-primary/20 shadow-sm"
                   : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
               )}
             >
@@ -167,11 +176,11 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
           <div className="flex items-center justify-between px-2">
             <span className="text-[10px] uppercase tracking-widest font-bold opacity-50">Palette</span>
             <div className="flex items-center bg-muted/50 p-1 rounded-xl border border-border/50">
-               <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-primary" /></button>
-               <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
-               <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
-               <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
-               <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
+              <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-primary" /></button>
+              <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
+              <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
+              <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
+              <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")}><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
             </div>
           </div>
         </div>
@@ -181,9 +190,9 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
             <Zap className="w-4 h-4 text-amber-500 fill-amber-500/20" />
             <span className="text-xs font-medium">Pro Account</span>
           </div>
-          <Settings 
+          <Settings
             onClick={onOpenSettings}
-            className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors" 
+            className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
           />
         </div>
       </div>
