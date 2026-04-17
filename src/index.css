@@ -147,58 +147,70 @@
   scrollbar-width: none;
 }
 
-/* Master Markdown Polish */
+/* FINAL Markdown Stabilization Block */
 .markdown-body {
   line-height: 1.5 !important;
+  font-family: var(--app-font-family) !important;
+  background-color: transparent !important;
 }
 
-.markdown-body h1, 
-.markdown-body h2, 
-.markdown-body h3 {
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+  color: hsl(var(--foreground)) !important;
+  border-bottom: 1px solid hsla(var(--border) / 0.5) !important;
   margin-top: 1.25rem !important;
   margin-bottom: 0.75rem !important;
-  padding-bottom: 0.2rem !important;
 }
 
-.markdown-body p,
-.markdown-body blockquote,
-.markdown-body ul,
-.markdown-body ol,
-.markdown-body dl,
-.markdown-body table,
-.markdown-body pre {
+/* List Structure & Markers */
+.markdown-body ul, 
+.markdown-body ol {
+  padding-left: 1.75rem !important;
   margin-top: 0 !important;
-  margin-bottom: 0.6rem !important;
+  margin-bottom: 0.8rem !important;
+}
+
+.markdown-body ul {
+  list-style-type: disc !important;
+}
+
+.markdown-body ol {
+  list-style-type: decimal !important;
 }
 
 .markdown-body li {
   margin-bottom: 0.1rem !important;
 }
 
-.markdown-body li > p,
-.markdown-body li > div {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  display: inline-block; 
-}
-
-.markdown-body ul, 
-.markdown-body ol {
-  padding-left: 1.6rem !important;
-}
-
-/* Fix double-dot/marker issue by ensuring standard markers */
+/* Styled Marker */
 .markdown-body li::marker {
-  color: var(--primary) !important;
-  font-size: 1.1em;
+  color: hsl(var(--primary)) !important;
+  font-weight: bold !important;
 }
 
-.markdown-body li p {
-  margin-top: 0 !important;
+/* Ensure sub-points inherit correctly */
+.markdown-body li > ul,
+.markdown-body li > ol {
+  margin-top: 0.2rem !important;
   margin-bottom: 0 !important;
+  padding-left: 1.25rem !important;
 }
 
-.markdown-body ul, 
-.markdown-body ol {
-  padding-left: 2em !important;
+/* Kill all conflicting pseudo-elements */
+.markdown-body li::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Neutralize inner element margins */
+.markdown-body p, 
+.markdown-body div, 
+.markdown-body blockquote {
+  margin-top: 0 !important;
+  margin-bottom: 0.8rem !important;
+}
+
+.markdown-body li > p, 
+.markdown-body li > div {
+  margin-bottom: 0 !important;
+  display: inline !important; 
 }
