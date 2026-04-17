@@ -15,6 +15,7 @@ import { useSettings } from './hooks/useSettings';
 import SettingsModal from './components/SettingsModal';
 import QuickOpen from './components/QuickOpen';
 import ConfirmModal from './components/ConfirmModal';
+import Breadcrumbs from './components/Breadcrumbs';
 import { type SidebarHandle } from './components/Sidebar';
 
 const DEFAULT_DOCS: Document[] = [
@@ -64,6 +65,8 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isQuickOpenOpen, setIsQuickOpenOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState<string | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+  const [deleteContentsChecked, setDeleteContentsChecked] = useState(false);
 
   const { settings, updateSettings, resetSettings } = useSettings();
 
@@ -204,20 +207,34 @@ export default function App() {
     setActiveId(newDoc.id);
   };
 
-  const createNewFolder = () => {
+  const createNewFolder = (parentId: string | null = null) => {
     const newFolder: Folder = {
       id: generateId(),
       name: 'New Folder',
-      parentId: null
+      parentId
     };
     setFolders([newFolder, ...folders]);
   };
 
-  const deleteFolder = (id: string) => {
-    // Move all documents in this folder to root
-    setDocuments(docs => docs.map(d => d.folderId === id ? { ...d, folderId: null } : d));
-    // Implementation for subfolders could be recursive, but let's keep it simple for now
-    setFolders(fs => fs.filter(f => f.id !== id));
+  const deleteFolder = (id: string, deleteContents: boolean = false) => {
+    if (deleteContents) {
+      // Recursively delete contents
+      const getAllChildFolderIds = (fid: string): string[] => {
+        const children = folders.filter(f => f.parentId === fid);
+        return [fid, ...children.flatMap(f => getAllChildFolderIds(f.id))];
+      };
+      
+      const idsToDelete = getAllChildFolderIds(id);
+      setDocuments(docs => docs.filter(d => !d.folderId || !idsToDelete.includes(d.folderId)));
+      setFolders(fs => fs.filter(f => !idsToDelete.includes(f.id)));
+    } else {
+      // Move documents and subfolders to parent's level or root
+      const folder = folders.find(f => f.id === id);
+      const parentId = folder?.parentId || null;
+      
+      setDocuments(docs => docs.map(d => d.folderId === id ? { ...d, folderId: parentId } : d));
+      setFolders(fs => fs.map(f => f.parentId === id ? { ...f, parentId } : f).filter(f => f.id !== id));
+    }
   };
 
   const renameFolder = (id: string, name: string) => {
@@ -226,6 +243,26 @@ export default function App() {
 
   const moveDocToFolder = (docId: string, folderId: string | null) => {
     setDocuments(docs => docs.map(d => d.id === docId ? { ...d, folderId } : d));
+  };
+
+  const moveFolderToFolder = (folderId: string, targetParentId: string | null) => {
+    // Avoid moving a folder into itself
+    if (folderId === targetParentId) return;
+    
+    // Avoid moving a parent into its own child (circular dependency check)
+    const isChildOf = (fId: string, potentialParentId: string): boolean => {
+      const folder = folders.find(f => f.id === potentialParentId);
+      if (!folder || !folder.parentId) return false;
+      if (folder.parentId === fId) return true;
+      return isChildOf(fId, folder.parentId);
+    };
+
+    if (targetParentId && isChildOf(folderId, targetParentId)) {
+        // Option: Swap, or just ignore. Let's ignore for safety.
+        return;
+    }
+
+    setFolders(fs => fs.map(f => f.id === folderId ? { ...f, parentId: targetParentId } : f));
   };
 
   const importDocuments = (docs: Document[]) => {
@@ -244,6 +281,31 @@ export default function App() {
     setDocuments(nextDocs);
     if (activeId === docToDelete) setActiveId(nextDocs[0].id);
     setDocToDelete(null);
+  };
+
+  const handleConfirmDeleteFolder = () => {
+    if (!folderToDelete) return;
+    deleteFolder(folderToDelete, deleteContentsChecked);
+    setFolderToDelete(null);
+    setDeleteContentsChecked(false);
+  };
+  
+  const getBreadcrumbs = () => {
+    const items: { id: string; name: string; isFolder: boolean; }[] = [];
+    if (!activeDoc) return items;
+
+    let currentFolderId = activeDoc.folderId;
+    while (currentFolderId) {
+      const folder = folders.find(f => f.id === currentFolderId);
+      if (folder) {
+        items.unshift({ id: folder.id, name: folder.name, isFolder: true });
+        currentFolderId = folder.parentId;
+      } else {
+        break;
+      }
+    }
+    items.push({ id: activeDoc.id, name: activeDoc.title || 'Untitled', isFolder: false });
+    return items;
   };
 
   const handleOpenFile = () => {
@@ -299,8 +361,9 @@ export default function App() {
         onNew={() => createNewDoc()}
         onNewFolder={createNewFolder}
         onDelete={deleteDoc}
-        onDeleteFolder={deleteFolder}
+        onDeleteFolder={setFolderToDelete}
         onMoveToFolder={moveDocToFolder}
+        onMoveFolderToFolder={moveFolderToFolder}
         onRenameFolder={renameFolder}
         isOpen={isSidebarOpen && !settings.zenMode}
         onOpenFile={handleOpenFile}
@@ -326,14 +389,12 @@ export default function App() {
                 <Menu className="w-5 h-5" />
               </button>
               <div className="flex flex-col min-w-0">
+                <Breadcrumbs items={getBreadcrumbs()} className="mb-0.5" />
                 <input
                   value={activeDoc.title}
                   onChange={(e) => setDocuments(docs => docs.map(d => d.id === activeId ? { ...d, title: e.target.value } : d))}
                   className="bg-transparent border-none text-lg font-bold outline-none focus:text-primary transition-colors truncate max-w-[200px] md:max-w-[400px]"
                 />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest flex items-center gap-1">
-                  <Info className="w-3 h-3" /> Autosaved to LocalStorage
-                </span>
               </div>
             </div>
 
@@ -482,6 +543,29 @@ export default function App() {
             onCancel={() => setDocToDelete(null)}
             danger
           />
+        )}
+
+        {folderToDelete && (
+          <ConfirmModal
+            title="Delete Folder?"
+            description={`Are you sure you want to delete "${folders.find(f => f.id === folderToDelete)?.name}"?`}
+            confirmLabel="Delete"
+            onConfirm={handleConfirmDeleteFolder}
+            onCancel={() => setFolderToDelete(null)}
+            danger
+          >
+            <label className="flex items-center gap-2 cursor-pointer group mt-4">
+              <input 
+                type="checkbox" 
+                checked={deleteContentsChecked} 
+                onChange={(e) => setDeleteContentsChecked(e.target.checked)}
+                className="w-4 h-4 rounded border-border bg-muted text-primary focus:ring-primary/30"
+              />
+              <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                Delete folder contents (including subfolders and notes)
+              </span>
+            </label>
+          </ConfirmModal>
         )}
       </AnimatePresence>
 

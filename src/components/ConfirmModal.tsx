@@ -9,6 +9,7 @@ interface ConfirmModalProps {
   onCancel: () => void;
   confirmLabel?: string;
   danger?: boolean;
+  children?: React.ReactNode;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({ 
@@ -17,7 +18,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm, 
   onCancel, 
   confirmLabel = "Confirm",
-  danger = false 
+  danger = false,
+  children
 }) => (
   <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
     {/* Backdrop */}
@@ -40,6 +42,12 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <h3 className="text-xl font-bold">{title}</h3>
         <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
       </div>
+
+      {children && (
+        <div className="py-2">
+          {children}
+        </div>
+      )}
       
       <div className="grid grid-cols-2 gap-3">
         <button 

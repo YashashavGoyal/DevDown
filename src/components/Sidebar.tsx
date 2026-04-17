@@ -4,8 +4,8 @@ import {
   FileText, Plus, Search, Trash2,
   Settings, Zap, Layout, X, Palette,
   Sun, Moon, Monitor, FolderOpen,
-  FolderPlus, Folder, ChevronRight, ChevronDown,
-  MoreVertical, MoreHorizontal, FolderInput
+  FolderPlus, Folder, ChevronRight,
+  ChevronDown, FolderInput
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -29,11 +29,12 @@ interface SidebarProps {
   activeId: string;
   onSelect: (id: string) => void;
   onNew: () => void;
-  onNewFolder: () => void;
+  onNewFolder: (parentId?: string | null) => void;
   onOpenFile: () => void;
   onDelete: (id: string) => void;
   onDeleteFolder: (id: string) => void;
   onMoveToFolder: (docId: string, folderId: string | null) => void;
+  onMoveFolderToFolder: (folderId: string, targetParentId: string | null) => void;
   onRenameFolder: (id: string, name: string) => void;
   isOpen: boolean;
   onToggle: () => void;
@@ -59,6 +60,7 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
   onDelete,
   onDeleteFolder,
   onMoveToFolder,
+  onMoveFolderToFolder,
   onRenameFolder,
   isOpen,
   onToggle,
@@ -71,6 +73,7 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [movingDocId, setMovingDocId] = useState<string | null>(null);
+  const [dragTargetId, setDragTargetId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -84,6 +87,54 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setExpandedFolders(next);
+  };
+
+  const handleDragStart = (e: React.DragEvent, id: string, type: 'doc' | 'folder') => {
+    e.dataTransfer.setData('application/json', JSON.stringify({ id, type }));
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.dropEffect = 'move';
+
+    // Add a class or style to the dragging element if needed
+    if (e.currentTarget) {
+      (e.currentTarget as HTMLElement).style.opacity = '0.4';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget) {
+      (e.currentTarget as HTMLElement).style.opacity = '1';
+    }
+    setDragTargetId(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string | null) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (dragTargetId !== id) {
+      setDragTargetId(id);
+    }
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string | null) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragTargetId(null);
+
+    try {
+      const jsonData = e.dataTransfer.getData('application/json');
+      if (!jsonData) return;
+
+      const { id, type } = JSON.parse(jsonData);
+
+      if (type === 'doc') {
+        onMoveToFolder(id, targetId);
+      } else if (type === 'folder' && id !== targetId) {
+        onMoveFolderToFolder(id, targetId);
+      }
+    } catch (err) {
+      console.error('Failed to parse drag data:', err);
+    }
   };
 
   const filteredDocuments = documents.filter(doc =>
@@ -100,31 +151,50 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
 
     return (
       <div key={folder.id} className="space-y-1">
-        <div 
-          className="group flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground transition-all"
+        <div
+          className={cn(
+            "group flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground transition-all",
+            dragTargetId === folder.id && "bg-primary/20 text-primary"
+          )}
           style={{ paddingLeft: `${level * 12 + 12}px` }}
           onClick={() => toggleFolder(folder.id)}
+          onDragOver={(e) => handleDragOver(e, folder.id)}
+          onDragLeave={() => setDragTargetId(null)}
+          onDrop={(e) => handleDrop(e, folder.id)}
+          onDragEnd={handleDragEnd}
+          draggable
+          onDragStart={(e) => handleDragStart(e, folder.id, 'folder')}
         >
           {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           <Folder className={cn("w-4 h-4", isExpanded ? "text-primary fill-primary/10" : "text-muted-foreground/50")} />
-          <input 
+          <input
             defaultValue={folder.name}
             onBlur={(e) => onRenameFolder(folder.id, e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
             onClick={(e) => e.stopPropagation()}
             className="flex-1 bg-transparent border-none outline-none text-sm font-medium focus:text-primary min-w-0"
           />
-          <button 
-            onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive rounded transition-all"
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+            <button
+              onClick={(e) => { e.stopPropagation(); onNewFolder(folder.id); toggleFolder(folder.id); }}
+              className="p-1 hover:text-primary rounded transition-all"
+              title="New Subfolder"
+            >
+              <FolderPlus className="w-3 h-3" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }}
+              className="p-1 hover:text-destructive rounded transition-all"
+              title="Delete Folder"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
         </div>
-        
+
         <AnimatePresence initial={false}>
           {isExpanded && (
-            <motion.div 
+            <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -133,6 +203,14 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
             >
               {childFolders.map(f => renderFolder(f, level + 1))}
               {childDocs.map(doc => renderDocument(doc, level + 1))}
+              {childFolders.length === 0 && childDocs.length === 0 && (
+                <div
+                  className="text-[10px] text-muted-foreground/40 italic py-1"
+                  style={{ paddingLeft: `${(level + 1) * 12 + 28}px` }}
+                >
+                  Empty Folder
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -151,6 +229,9 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
           : "hover:bg-muted/30 text-muted-foreground hover:text-foreground"
       )}
       style={{ marginLeft: `${level * 12}px` }}
+      draggable
+      onDragStart={(e) => handleDragStart(e, doc.id, 'doc')}
+      onDragEnd={handleDragEnd}
     >
       <FileText className={cn(
         "w-4 h-4 shrink-0 transition-transform group-hover:scale-110",
@@ -159,7 +240,7 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{doc.title || 'Untitled'}</p>
       </div>
-      
+
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
         <button
           onClick={(e) => {
@@ -183,19 +264,19 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
       </div>
 
       {movingDocId === doc.id && (
-        <div 
+        <div
           className="absolute right-0 top-full mt-1 w-48 bg-card border border-border rounded-xl shadow-2xl z-[110] p-2 glass animate-in fade-in slide-in-from-top-2"
           onClick={(e) => e.stopPropagation()}
         >
           <p className="text-[10px] uppercase tracking-widest font-bold opacity-50 px-2 py-1 mb-1">Move to...</p>
-          <button 
+          <button
             onClick={() => { onMoveToFolder(doc.id, null); setMovingDocId(null); }}
             className="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-primary/10 hover:text-primary flex items-center gap-2"
           >
             <Layout className="w-3 h-3" /> Root Level
           </button>
           {folders.map(f => (
-            <button 
+            <button
               key={f.id}
               onClick={() => { onMoveToFolder(doc.id, f.id); setMovingDocId(null); }}
               className="w-full text-left px-2 py-1.5 rounded-lg text-xs hover:bg-primary/10 hover:text-primary flex items-center gap-2"
@@ -237,7 +318,7 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
             <Plus className="w-4 h-4" />
           </button>
           <button
-            onClick={onNewFolder}
+            onClick={() => onNewFolder()}
             className="p-1.5 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-colors"
             title="New Folder"
           >
@@ -275,7 +356,17 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
       </div>
 
       {/* Hierarchical List */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar">
+      <div
+        className="flex-1 overflow-y-auto px-3 py-2 space-y-1 custom-scrollbar min-h-[50px]"
+        onDragOver={(e) => handleDragOver(e, 'root')}
+        onDragLeave={() => setDragTargetId(null)}
+        onDrop={(e) => handleDrop(e, null)}
+      >
+        {dragTargetId === 'root' && (
+          <div className="h-6 bg-primary/10 rounded-xl mb-2 border-2 border-dashed border-primary/30 flex items-center justify-center animate-pulse">
+            <span className="text-[10px] font-bold uppercase tracking-tighter text-primary">Move to Root</span>
+          </div>
+        )}
         {isSearching ? (
           filteredDocuments.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full opacity-40 py-10 text-center px-4">
