@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Moon, Sun, Monitor, Eye, Edit3, 
+import {
+  Moon, Sun, Monitor, Eye, Edit3,
   Share2, Menu, Command as CommandIcon,
   Palette, Smartphone, Info, Check, Columns
 } from 'lucide-react';
 import Editor from './components/Editor';
 import Preview from './components/Preview';
-import Sidebar, { type Document } from './components/Sidebar';
+import Sidebar, { type Document, type Folder } from './components/Sidebar';
 import Toolbar, { type MarkdownAction } from './components/Toolbar';
 import { EditorView } from '@codemirror/view';
 import { cn, generateId } from './lib/utils';
@@ -22,18 +22,32 @@ const DEFAULT_DOCS: Document[] = [
     id: '1',
     title: 'Welcome to DevDown',
     content: `# Welcome to DevDown 🚀\n\nDevDown is a premium, GitHub-standard Markdown editor.\n\n## Math Support (KaTeX)\nWhen $a \\ne 0$, there are two solutions to $ax^2 + bx + c = 0$ and they are\n$$x = {-b \\pm \\sqrt{b^2-4ac} \\over 2a}$$\n\n### Mermaid Demo\n\`\`\`mermaid\ngraph TD\n  A[Start] --> B(Improved UI)\n  B --> C{Premium?}\n  C -- Yes --> D[DevDown]\n  C -- No --> E[Generic Editor]\n\`\`\``,
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    folderId: null
   }
 ];
+
+const DEFAULT_FOLDERS: Folder[] = [];
 
 export default function App() {
   const [documents, setDocuments] = useState<Document[]>(() => {
     try {
       const saved = localStorage.getItem('devdown_docs');
-      return saved ? JSON.parse(saved) : DEFAULT_DOCS;
+      const docs: Document[] = saved ? JSON.parse(saved) : DEFAULT_DOCS;
+      // Ensure all docs have folderId
+      return docs.map(d => ({ ...d, folderId: d.folderId || null }));
     } catch (err) {
       console.error('Failed to parse documents from localStorage:', err);
       return DEFAULT_DOCS;
+    }
+  });
+  const [folders, setFolders] = useState<Folder[]>(() => {
+    try {
+      const saved = localStorage.getItem('devdown_folders');
+      return saved ? JSON.parse(saved) : DEFAULT_FOLDERS;
+    } catch (err) {
+      console.error('Failed to parse folders from localStorage:', err);
+      return DEFAULT_FOLDERS;
     }
   });
   const [activeId, setActiveId] = useState(documents[0].id);
@@ -65,21 +79,22 @@ export default function App() {
   // Persistence
   useEffect(() => {
     localStorage.setItem('devdown_docs', JSON.stringify(documents));
+    localStorage.setItem('devdown_folders', JSON.stringify(folders));
     localStorage.setItem('devdown_palette', palette);
-  }, [documents, palette]);
+  }, [documents, folders, palette]);
 
   // Theme logic
   useEffect(() => {
     setMounted(true);
     const root = document.documentElement;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
     const applyTheme = () => {
       const isDark = theme === 'dark' || (theme === 'system' && mediaQuery.matches);
       if (isDark) root.classList.add('dark');
       else root.classList.remove('dark');
       setIsEditorDark(isDark);
-      
+
       // Apply palette
       root.classList.remove('theme-velvet', 'theme-slate', 'theme-forest', 'theme-midnight');
       if (palette !== 'default') root.classList.add(`theme-${palette}`);
@@ -143,7 +158,7 @@ export default function App() {
 
     const getMultiLineInsertion = (prefix: string | ((line: string, i: number) => string)) => {
       if (!selectedText) return typeof prefix === 'function' ? prefix('text', 0) : `${prefix}text`;
-      return selectedText.split('\n').map((line, i) => 
+      return selectedText.split('\n').map((line, i) =>
         typeof prefix === 'function' ? prefix(line, i) : `${prefix}${line}`
       ).join('\n');
     };
@@ -177,15 +192,40 @@ export default function App() {
     setDocuments(docs => docs.map(d => d.id === activeId ? { ...d, content: val, updatedAt: Date.now() } : d));
   }, [activeId]);
 
-  const createNewDoc = () => {
+  const createNewDoc = (folderId: string | null = null) => {
     const newDoc: Document = {
       id: generateId(),
       title: 'New Note',
       content: '# New Note\nStart writing...',
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      folderId
     };
     setDocuments([newDoc, ...documents]);
     setActiveId(newDoc.id);
+  };
+
+  const createNewFolder = () => {
+    const newFolder: Folder = {
+      id: generateId(),
+      name: 'New Folder',
+      parentId: null
+    };
+    setFolders([newFolder, ...folders]);
+  };
+
+  const deleteFolder = (id: string) => {
+    // Move all documents in this folder to root
+    setDocuments(docs => docs.map(d => d.folderId === id ? { ...d, folderId: null } : d));
+    // Implementation for subfolders could be recursive, but let's keep it simple for now
+    setFolders(fs => fs.filter(f => f.id !== id));
+  };
+
+  const renameFolder = (id: string, name: string) => {
+    setFolders(fs => fs.map(f => f.id === id ? { ...f, name } : f));
+  };
+
+  const moveDocToFolder = (docId: string, folderId: string | null) => {
+    setDocuments(docs => docs.map(d => d.id === docId ? { ...d, folderId } : d));
   };
 
   const importDocuments = (docs: Document[]) => {
@@ -205,7 +245,7 @@ export default function App() {
     if (activeId === docToDelete) setActiveId(nextDocs[0].id);
     setDocToDelete(null);
   };
-  
+
   const handleOpenFile = () => {
     fileInputRef.current?.click();
   };
@@ -221,7 +261,8 @@ export default function App() {
           id: generateId(),
           title: file.name.replace(/\.md$/i, ''),
           content,
-          updatedAt: Date.now()
+          updatedAt: Date.now(),
+          folderId: null
         };
       })
     );
@@ -244,7 +285,7 @@ export default function App() {
       {/* Sidebar Overlay for Mobile */}
       <AnimatePresence>
         {isSidebarOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
             className="fixed inset-0 bg-background/60 backdrop-blur-sm z-30 lg:hidden"
@@ -252,10 +293,16 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <Sidebar 
+      <Sidebar
         ref={sidebarRef}
-        documents={documents} activeId={activeId} onSelect={setActiveId}
-        onNew={createNewDoc} onDelete={deleteDoc} isOpen={isSidebarOpen && !settings.zenMode}
+        documents={documents} folders={folders} activeId={activeId} onSelect={setActiveId}
+        onNew={() => createNewDoc()}
+        onNewFolder={createNewFolder}
+        onDelete={deleteDoc}
+        onDeleteFolder={deleteFolder}
+        onMoveToFolder={moveDocToFolder}
+        onRenameFolder={renameFolder}
+        isOpen={isSidebarOpen && !settings.zenMode}
         onOpenFile={handleOpenFile}
         onToggle={() => setIsSidebarOpen(false)}
         theme={theme} setTheme={setTheme}
@@ -271,7 +318,7 @@ export default function App() {
         {!settings.zenMode && (
           <header className="h-[var(--header-height)] flex items-center justify-between px-6 border-b border-border/50 glass z-20 shrink-0">
             <div className="flex items-center gap-4 min-w-0">
-              <button 
+              <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className="p-2 hover:bg-muted rounded-xl transition-colors shrink-0"
                 title={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
@@ -279,7 +326,7 @@ export default function App() {
                 <Menu className="w-5 h-5" />
               </button>
               <div className="flex flex-col min-w-0">
-                <input 
+                <input
                   value={activeDoc.title}
                   onChange={(e) => setDocuments(docs => docs.map(d => d.id === activeId ? { ...d, title: e.target.value } : d))}
                   className="bg-transparent border-none text-lg font-bold outline-none focus:text-primary transition-colors truncate max-w-[200px] md:max-w-[400px]"
@@ -292,30 +339,30 @@ export default function App() {
 
             <div className="flex items-center gap-2">
               <div className="hidden lg:flex items-center bg-muted/50 p-1 rounded-xl mr-2 border border-border/50 shadow-inner">
-                 <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-30")} title="Standard"><Palette className="w-3.5 h-3.5 text-primary" /></button>
-                 <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-30")} title="Velvet"><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
-                 <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")} title="Slate"><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
-                 <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")} title="Forest"><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
-                 <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")} title="Midnight"><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
+                <button onClick={() => setPalette('default')} className={cn("p-1.5 rounded-lg transition-all", palette === 'default' ? "bg-background shadow-sm" : "opacity-30")} title="Standard"><Palette className="w-3.5 h-3.5 text-primary" /></button>
+                <button onClick={() => setPalette('velvet')} className={cn("p-1.5 rounded-lg transition-all", palette === 'velvet' ? "bg-background shadow-sm" : "opacity-30")} title="Velvet"><Palette className="w-3.5 h-3.5 text-[#e11d48]" /></button>
+                <button onClick={() => setPalette('slate')} className={cn("p-1.5 rounded-lg transition-all", palette === 'slate' ? "bg-background shadow-sm" : "opacity-30")} title="Slate"><Palette className="w-3.5 h-3.5 text-[#475569]" /></button>
+                <button onClick={() => setPalette('forest')} className={cn("p-1.5 rounded-lg transition-all", palette === 'forest' ? "bg-background shadow-sm" : "opacity-30")} title="Forest"><Palette className="w-3.5 h-3.5 text-[#22c55e]" /></button>
+                <button onClick={() => setPalette('midnight')} className={cn("p-1.5 rounded-lg transition-all", palette === 'midnight' ? "bg-background shadow-sm" : "opacity-30")} title="Midnight"><Palette className="w-3.5 h-3.5 text-[#3b82f6]" /></button>
               </div>
 
               <div className="hidden lg:flex items-center bg-muted/50 p-1 rounded-xl border border-border/50 shadow-inner">
-                <button 
-                  onClick={() => setViewMode('edit')} 
+                <button
+                  onClick={() => setViewMode('edit')}
                   className={cn("p-1.5 rounded-lg transition-all", viewMode === 'edit' ? "bg-background shadow-sm text-primary" : "text-muted-foreground opacity-50")}
                   title="Editor Only"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
                 </button>
-                <button 
-                  onClick={() => setViewMode('split')} 
+                <button
+                  onClick={() => setViewMode('split')}
                   className={cn("p-1.5 rounded-lg transition-all", viewMode === 'split' ? "bg-background shadow-sm text-primary" : "text-muted-foreground opacity-50")}
                   title="Split View"
                 >
                   <Columns className="w-3.5 h-3.5" />
                 </button>
-                <button 
-                  onClick={() => setViewMode('view')} 
+                <button
+                  onClick={() => setViewMode('view')}
                   className={cn("p-1.5 rounded-lg transition-all", viewMode === 'view' ? "bg-background shadow-sm text-primary" : "text-muted-foreground opacity-50")}
                   title="Preview Only"
                 >
@@ -328,13 +375,13 @@ export default function App() {
                 <button onClick={() => setTheme('dark')} className={cn("p-2 rounded-lg transition-all", theme === 'dark' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Moon className="w-3.5 h-3.5" /></button>
                 <button onClick={() => setTheme('system')} className={cn("p-2 rounded-lg transition-all", theme === 'system' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}><Monitor className="w-3.5 h-3.5" /></button>
               </div>
-              
-              <button 
+
+              <button
                 onClick={handleShare}
                 className={cn(
                   "p-2.5 rounded-xl shadow-lg transition-all ml-1 hidden lg:block",
-                  isSharing 
-                    ? "bg-green-500 text-white shadow-green-500/20" 
+                  isSharing
+                    ? "bg-green-500 text-white shadow-green-500/20"
                     : "bg-primary text-primary-foreground shadow-primary/20 hover:scale-105 active:scale-95"
                 )}
                 title="Copy link to clipboard"
@@ -346,8 +393,8 @@ export default function App() {
         )}
 
         {/* Toolbar - Customizable visibility in Zen Mode */}
-        <Toolbar 
-          onAction={handleToolbarAction} 
+        <Toolbar
+          onAction={handleToolbarAction}
           className={cn(
             (viewMode === 'view' && "hidden lg:flex"),
             (settings.zenMode && !settings.showToolbarInZen) && "hidden"
@@ -358,12 +405,12 @@ export default function App() {
         <main className="flex-1 flex overflow-hidden lg:flex-row flex-col">
           <AnimatePresence mode="popLayout">
             {(viewMode === 'split' || viewMode === 'edit') && (
-              <motion.div 
+              <motion.div
                 key="editor-pane" initial={{ flex: 0, opacity: 0 }} animate={{ flex: viewMode === 'split' ? 1 : 2, opacity: 1 }} exit={{ flex: 0, opacity: 0 }}
                 className={cn("h-full border-r border-border transition-all duration-500 overflow-hidden relative group", viewMode === 'split' ? "w-full lg:w-1/2" : "w-full")}
               >
-                <Editor 
-                  value={activeDoc.content} onChange={updateContent} 
+                <Editor
+                  value={activeDoc.content} onChange={updateContent}
                   onScroll={() => handleScroll('editor')} containerRef={editorContainerRef}
                   onEditorCreate={(v) => editorViewRef.current = v}
                   onAction={handleToolbarAction}
@@ -376,10 +423,10 @@ export default function App() {
             )}
 
             {(viewMode === 'split' || viewMode === 'view') && (
-              <motion.div 
+              <motion.div
                 key="preview-pane" initial={{ flex: 0, opacity: 0 }} animate={{ flex: viewMode === 'split' ? 1 : 2, opacity: 1 }} exit={{ flex: 0, opacity: 0 }}
                 className={cn(
-                  "h-full transition-all duration-500 overflow-hidden", 
+                  "h-full transition-all duration-500 overflow-hidden",
                   viewMode === 'split' ? "w-full lg:w-1/2" : "w-full",
                   settings.zenMode && "px-10 py-6"
                 )}
@@ -407,27 +454,27 @@ export default function App() {
               <span>{activeDoc.content.split(/\s+/).filter(Boolean).length} Words</span>
             </div>
             <div className="flex items-center gap-4">
-               <span className="flex items-center gap-1.5 hidden sm:flex"><Smartphone className="w-3 h-3" /> Responsive Mode</span>
-               <span className="text-primary font-bold">● Live Sync</span>
+              <span className="flex items-center gap-1.5 hidden sm:flex"><Smartphone className="w-3 h-3" /> Responsive Mode</span>
+              <span className="text-primary font-bold">● Live Sync</span>
             </div>
           </footer>
         )}
       </div>
 
-      <SettingsModal 
+      <SettingsModal
         isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
         settings={settings} updateSettings={updateSettings} resetSettings={resetSettings}
         documents={documents} onImport={importDocuments}
       />
 
-      <QuickOpen 
+      <QuickOpen
         isOpen={isQuickOpenOpen} onClose={() => setIsQuickOpenOpen(false)}
         documents={documents} onSelect={(id) => { setActiveId(id); setIsQuickOpenOpen(false); }}
       />
 
       <AnimatePresence>
         {docToDelete && (
-          <ConfirmModal 
+          <ConfirmModal
             title="Delete Note?"
             description={`Are you sure you want to delete "${documents.find(d => d.id === docToDelete)?.title || 'this note'}"? This action cannot be undone.`}
             confirmLabel="Delete"
@@ -438,13 +485,13 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        onChange={handleFileInputChange} 
-        accept=".md" 
-        multiple 
-        className="hidden" 
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileInputChange}
+        accept=".md"
+        multiple
+        className="hidden"
       />
     </div>
   );
