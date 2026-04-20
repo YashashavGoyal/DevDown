@@ -492,7 +492,7 @@ export default function App() {
                   settings.zenMode && "px-10 py-6"
                 )}
               >
-                <Preview value={activeDoc.content} containerRef={previewContainerRef} onScroll={() => handleScroll('preview')} />
+                <Preview value={activeDoc.content} isDark={isEditorDark} containerRef={previewContainerRef} onScroll={() => handleScroll('preview')} />
               </motion.div>
             )}
           </AnimatePresence>

@@ -10,6 +10,7 @@ import { cn } from '../lib/utils';
 
 interface PreviewProps {
   value: string;
+  isDark?: boolean;
   containerRef?: React.RefObject<HTMLDivElement | null>;
   onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }
@@ -85,6 +86,15 @@ const MarkdownComponents = {
     if (align) style.textAlign = align as any;
     return <div style={style} {...props}>{children}</div>;
   },
+  table: ({ children }: any) => (
+    <div className="table-container my-8 overflow-hidden rounded-none border border-border/50 shadow-sm bg-background">
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full border-collapse border-hidden">
+          {children}
+        </table>
+      </div>
+    </div>
+  ),
   // Custom P to prevent hydration issues with nested block elements from rehype-raw
   p: ({ children }: any) => {
     const hasBlockChild = React.Children.toArray(children).some(
@@ -95,16 +105,14 @@ const MarkdownComponents = {
   }
 };
 
-const Preview: React.FC<PreviewProps> = ({ value, containerRef, onScroll }) => {
-  // Use the established check for dark mode
-  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-
+const Preview: React.FC<PreviewProps> = ({ value, isDark, containerRef, onScroll }) => {
   return (
     <div
       ref={containerRef}
       className={cn(
         "h-full w-full overflow-y-auto px-10 py-16 sync-scroll-container custom-scrollbar max-w-[900px] mx-auto transition-all duration-500 bg-background",
-        "selection:bg-primary/20 selection:text-primary"
+        "selection:bg-primary/20 selection:text-primary",
+        isDark ? "dark" : "light"
       )}
       onScroll={onScroll}
     >
