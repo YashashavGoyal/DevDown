@@ -20,6 +20,7 @@ interface EditorProps {
 }
 
 import { cn } from '../lib/utils';
+import logoTransparent from '../assets/logo-transparent.png';
 
 const Editor: React.FC<EditorProps> = ({ 
   value, onChange, onScroll, containerRef, 
@@ -76,7 +77,7 @@ const Editor: React.FC<EditorProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={cn("h-full w-full overflow-hidden")}
+      className={cn("h-full w-full overflow-hidden relative group/editor")}
       onScroll={onScroll}
     >
       <CodeMirror
@@ -94,6 +95,15 @@ const Editor: React.FC<EditorProps> = ({
         }}
         className="h-full outline-none"
       />
+      
+      {/* Watermark Logo */}
+      <div className="absolute bottom-8 right-8 pointer-events-none opacity-20 group-hover/editor:opacity-40 transition-opacity duration-700 select-none">
+        <img 
+          src={logoTransparent} 
+          alt="" 
+          className="w-80 h-80 object-contain grayscale brightness-0 invert dark:invert-0"
+        />
+      </div>
     </div>
   );
 };

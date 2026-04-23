@@ -16,6 +16,8 @@ import SettingsModal from './components/SettingsModal';
 import QuickOpen from './components/QuickOpen';
 import ConfirmModal from './components/ConfirmModal';
 import Breadcrumbs from './components/Breadcrumbs';
+import logoDark from './assets/logo_dark.png';
+import logoLight from './assets/logo_light.png';
 import { type SidebarHandle } from './components/Sidebar';
 
 const DEFAULT_DOCS: Document[] = [
@@ -388,6 +390,11 @@ export default function App() {
               >
                 <Menu className="w-5 h-5" />
               </button>
+              <img 
+                src={isEditorDark ? logoDark : logoLight} 
+                alt="DevDown" 
+                className="w-6 h-6 rounded-md shadow-sm hidden sm:block"
+              />
               <div className="flex flex-col min-w-0">
                 <Breadcrumbs items={getBreadcrumbs()} className="mb-0.5" />
                 <input
@@ -526,6 +533,7 @@ export default function App() {
         isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
         settings={settings} updateSettings={updateSettings} resetSettings={resetSettings}
         documents={documents} onImport={importDocuments}
+        isDark={isEditorDark}
       />
 
       <QuickOpen

@@ -8,6 +8,8 @@ import {
   ChevronDown, FolderInput
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import logoDark from '../assets/logo_dark.png';
+import logoLight from '../assets/logo_light.png';
 
 export interface Folder {
   id: string;
@@ -303,11 +305,19 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
     )}>
       {/* Sidebar Header */}
       <div className="p-6 flex items-center justify-between border-b border-border/50">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-primary/10 rounded-lg">
-            <Layout className="w-5 h-5 text-primary" />
+        <div className="flex items-center gap-3">
+          <div className="relative group/logo">
+            <div className="absolute -inset-2 bg-primary/20 rounded-xl blur-xl opacity-0 group-hover/logo:opacity-100 transition-opacity duration-500" />
+            <img 
+              src={theme === 'dark' ? logoDark : logoLight} 
+              alt="DevDown Logo" 
+              className="w-8 h-8 rounded-lg shadow-lg relative z-10 transition-transform group-hover/logo:scale-110 duration-300"
+            />
           </div>
-          <span className="font-bold tracking-tight text-lg">My Notes</span>
+          <div className="flex flex-col">
+            <span className="font-bold tracking-tighter text-xl bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">DevDown</span>
+            <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-primary opacity-80 -mt-1">Premium Editor</span>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button

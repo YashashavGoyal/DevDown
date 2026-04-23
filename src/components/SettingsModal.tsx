@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, Settings, Monitor, Type, 
-  Database, Keyboard, Download, 
+import {
+  X, Monitor, Type,
+  Database, Keyboard, Download,
   Upload, Trash2, Maximize2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -10,6 +10,8 @@ import { type AppSettings } from '../hooks/useSettings';
 import { type Document } from './Sidebar';
 import JSZip from 'jszip';
 import ConfirmModal from './ConfirmModal';
+import logoDark from '../assets/logo_dark.png';
+import logoLight from '../assets/logo_light.png';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -19,18 +21,20 @@ interface SettingsModalProps {
   resetSettings: () => void;
   documents: Document[];
   onImport: (docs: Document[]) => void;
+  isDark?: boolean;
 }
 
 type Tab = 'general' | 'appearance' | 'data' | 'shortcuts';
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  settings, 
-  updateSettings, 
+const SettingsModal: React.FC<SettingsModalProps> = ({
+  isOpen,
+  onClose,
+  settings,
+  updateSettings,
   resetSettings,
   documents,
-  onImport
+  onImport,
+  isDark = false
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -60,7 +64,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         filename = `${baseName}-${counter}.md`;
         counter++;
       }
-      
+
       usedFilenames.add(filename.toLowerCase());
       zip.file(filename, doc.content);
     });
@@ -107,16 +111,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     <AnimatePresence>
       <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
         {/* Backdrop */}
-        <motion.div 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
           className="absolute inset-0 bg-background/80 backdrop-blur-md"
         />
 
         {/* Modal */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -125,8 +129,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* Header */}
           <div className="p-6 border-b border-border/50 flex items-center justify-between bg-muted/30">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-xl">
-                <Settings className="w-5 h-5 text-primary" />
+              <div className="relative group/logo">
+                <div className="absolute -inset-1 bg-primary/20 rounded-lg blur opacity-0 group-hover/logo:opacity-100 transition-opacity" />
+                <img
+                  src={isDark ? logoDark : logoLight}
+                  alt="DevDown"
+                  className="w-8 h-8 rounded-lg shadow-md relative z-10"
+                />
               </div>
               <div>
                 <h2 className="text-xl font-bold tracking-tight">Settings</h2>
@@ -155,7 +164,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="flex items-center justify-between p-4 glass-inset rounded-2xl bg-muted/20">
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-semibold flex items-center gap-2 italic">
-                           <Maximize2 className="w-4 h-4 text-primary" /> Distraction-Free Writing
+                          <Maximize2 className="w-4 h-4 text-primary" /> Distraction-Free Writing
                         </span>
                         <p className="text-xs text-muted-foreground italic">Exit Zen Mode by pressing <kbd className="px-1.5 py-0.5 bg-muted rounded border border-border text-[10px] font-mono">ESC</kbd></p>
                       </div>
@@ -164,17 +173,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </Section>
 
                   <Section title="Editor Behavior">
-                    <SettingToggle 
-                      label="Line Numbers" 
+                    <SettingToggle
+                      label="Line Numbers"
                       description="Show line numbers on the left gutter"
-                      checked={settings.lineNumbers} 
-                      onChange={(val) => updateSettings({ lineNumbers: val })} 
+                      checked={settings.lineNumbers}
+                      onChange={(val) => updateSettings({ lineNumbers: val })}
                     />
-                    <SettingToggle 
-                      label="Line Wrapping" 
+                    <SettingToggle
+                      label="Line Wrapping"
                       description="Wrap long lines instead of scrolling horizontally"
-                      checked={settings.lineWrapping} 
-                      onChange={(val) => updateSettings({ lineWrapping: val })} 
+                      checked={settings.lineWrapping}
+                      onChange={(val) => updateSettings({ lineWrapping: val })}
                     />
                   </Section>
                 </div>
@@ -184,37 +193,37 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="space-y-8">
                   <Section title="Typography">
                     <div className="space-y-4">
-                       <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">Font Size</label>
-                       <div className="flex items-center gap-4">
-                          <input 
-                            type="range" min="12" max="24" step="1" 
-                            value={settings.fontSize} 
-                            onChange={(e) => updateSettings({ fontSize: parseInt(e.target.value) })}
-                            className="flex-1 h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
-                          />
-                          <span className="text-sm font-mono w-8">{settings.fontSize}px</span>
-                       </div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">Font Size</label>
+                      <div className="flex items-center gap-4">
+                        <input
+                          type="range" min="12" max="24" step="1"
+                          value={settings.fontSize}
+                          onChange={(e) => updateSettings({ fontSize: parseInt(e.target.value) })}
+                          className="flex-1 h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
+                        />
+                        <span className="text-sm font-mono w-8">{settings.fontSize}px</span>
+                      </div>
                     </div>
 
                     <div className="space-y-4 pt-4">
-                       <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">Font Family</label>
-                       <div className="grid grid-cols-3 gap-2">
-                          <FontOption 
-                            active={settings.fontFamily === 'sans'} 
-                            onClick={() => updateSettings({ fontFamily: 'sans' })}
-                            label="Inter" fontClass="font-sans"
-                          />
-                          <FontOption 
-                             active={settings.fontFamily === 'serif'} 
-                             onClick={() => updateSettings({ fontFamily: 'serif' })}
-                             label="Georgia" fontClass="font-serif"
-                          />
-                          <FontOption 
-                             active={settings.fontFamily === 'mono'} 
-                             onClick={() => updateSettings({ fontFamily: 'mono' })}
-                             label="Mono" fontClass="font-mono"
-                          />
-                       </div>
+                      <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">Font Family</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <FontOption
+                          active={settings.fontFamily === 'sans'}
+                          onClick={() => updateSettings({ fontFamily: 'sans' })}
+                          label="Inter" fontClass="font-sans"
+                        />
+                        <FontOption
+                          active={settings.fontFamily === 'serif'}
+                          onClick={() => updateSettings({ fontFamily: 'serif' })}
+                          label="Georgia" fontClass="font-serif"
+                        />
+                        <FontOption
+                          active={settings.fontFamily === 'mono'}
+                          onClick={() => updateSettings({ fontFamily: 'mono' })}
+                          label="Mono" fontClass="font-mono"
+                        />
+                      </div>
                     </div>
                   </Section>
                 </div>
@@ -240,16 +249,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </Section>
 
                   <Section title="Danger Zone">
-                     <button 
-                       onClick={() => setShowResetConfirm(true)}
-                       className="w-full flex items-center gap-4 p-4 rounded-2xl bg-destructive/5 hover:bg-destructive/10 border border-destructive/20 text-destructive transition-all group"
-                     >
-                        <Trash2 className="w-5 h-5" />
-                        <div className="text-left">
-                          <p className="text-sm font-bold">Reset Application</p>
-                          <p className="text-[11px] opacity-70">Wipe all notes and settings. This cannot be undone.</p>
-                        </div>
-                     </button>
+                    <button
+                      onClick={() => setShowResetConfirm(true)}
+                      className="w-full flex items-center gap-4 p-4 rounded-2xl bg-destructive/5 hover:bg-destructive/10 border border-destructive/20 text-destructive transition-all group"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                      <div className="text-left">
+                        <p className="text-sm font-bold">Reset Application</p>
+                        <p className="text-[11px] opacity-70">Wipe all notes and settings. This cannot be undone.</p>
+                      </div>
+                    </button>
                   </Section>
                 </div>
               )}
@@ -277,7 +286,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Nested Confirmations */}
         <AnimatePresence>
           {showResetConfirm && (
-            <ConfirmModal 
+            <ConfirmModal
               title="Reset Everything?"
               description="This will permanently delete all your notes and settings. All data currently stored in LocalStorage will be lost forever."
               confirmLabel="Reset All"
@@ -288,7 +297,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           )}
 
           {showZenConfirm && (
-            <ConfirmModal 
+            <ConfirmModal
               title="Enter Zen Mode?"
               description="Zen Mode will hide all UI clutter like the sidebar and headers to help you focus. You can press ESC anytime to exit."
               onConfirm={() => { updateSettings({ zenMode: true }); setShowZenConfirm(false); }}
@@ -304,12 +313,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 // --- Sub-components ---
 
 const TabButton = ({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: React.ComponentType<any>, label: string }) => (
-  <button 
+  <button
     onClick={onClick}
     className={cn(
       "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-      active 
-        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+      active
+        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
         : "text-muted-foreground hover:bg-muted"
     )}
   >
@@ -336,14 +345,14 @@ const SettingToggle = ({ label, description, checked, onChange }: { label: strin
 );
 
 const Switch = ({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) => (
-  <button 
+  <button
     onClick={() => onChange(!checked)}
     className={cn(
       "w-10 h-5 rounded-full transition-colors relative",
       checked ? "bg-primary" : "bg-muted-foreground/30"
     )}
   >
-    <motion.div 
+    <motion.div
       initial={false}
       animate={{ x: checked ? 22 : 2 }}
       className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm"
@@ -352,7 +361,7 @@ const Switch = ({ checked, onChange }: { checked: boolean, onChange: (val: boole
 );
 
 const FontOption = ({ active, onClick, label, fontClass }: { active: boolean, onClick: () => void, label: string, fontClass: string }) => (
-  <button 
+  <button
     onClick={onClick}
     className={cn(
       "p-3 rounded-xl border flex flex-col items-center gap-2 transition-all",
@@ -365,7 +374,7 @@ const FontOption = ({ active, onClick, label, fontClass }: { active: boolean, on
 );
 
 const DataAction = ({ icon: Icon, title, description, onClick, highlight = false }: { icon: React.ComponentType<any>, title: string, description: string, onClick: () => void, highlight?: boolean }) => (
-  <button 
+  <button
     onClick={onClick}
     className={cn(
       "flex items-center gap-4 p-4 rounded-2xl border transition-all group",
