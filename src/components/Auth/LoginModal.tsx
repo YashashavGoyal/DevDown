@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, Loader2, AlertCircle, Layout } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -6,10 +6,18 @@ import { supabase } from '../../lib/supabase';
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialSignUp?: boolean;
 }
 
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const [isSignUp, setIsSignUp] = useState(false);
+export default function LoginModal({ isOpen, onClose, initialSignUp = false }: LoginModalProps) {
+  const [isSignUp, setIsSignUp] = useState(initialSignUp);
+
+  // Sync state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setIsSignUp(initialSignUp);
+    }
+  }, [isOpen, initialSignUp]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,7 +40,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           },
         });
         if (error) throw error;
-        setMessage('Check your email for the confirmation link!');
+        setMessage('Confirmation link sent! If you already have an account, try signing in.');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -52,7 +60,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -126,10 +134,21 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold flex items-start gap-3 overflow-hidden"
+                    className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold flex flex-col gap-2 overflow-hidden"
                   >
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                    <span>{error}</span>
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                    {error.includes('already registered') && (
+                      <button 
+                        type="button"
+                        onClick={() => { setIsSignUp(false); setError(null); }}
+                        className="ml-7 text-left text-[10px] underline hover:opacity-80 transition-opacity"
+                      >
+                        Click here to Sign In instead →
+                      </button>
+                    )}
                   </motion.div>
                 )}
 
@@ -138,10 +157,21 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="p-4 rounded-2xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold flex items-start gap-3 overflow-hidden"
+                    className="p-4 rounded-2xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold flex flex-col gap-2 overflow-hidden"
                   >
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                    <span>{message}</span>
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 rotate-180" />
+                      <span>{message}</span>
+                    </div>
+                    {isSignUp && (
+                      <button 
+                        type="button"
+                        onClick={() => { setIsSignUp(false); setMessage(null); }}
+                        className="ml-7 text-left text-[10px] underline hover:opacity-80 transition-opacity"
+                      >
+                        Go to Sign In tab →
+                      </button>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

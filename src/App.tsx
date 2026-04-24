@@ -19,6 +19,7 @@ import Breadcrumbs from './components/Breadcrumbs';
 import { type SidebarHandle } from './components/Sidebar';
 import { useAuth } from './hooks/useAuth';
 import LoginModal from './components/Auth/LoginModal';
+import LandingPage from './components/Auth/LandingPage';
 import { storageManager } from './lib/storage/StorageManager';
 
 const DEFAULT_DOCS: Document[] = [
@@ -55,6 +56,10 @@ export default function App() {
 
   const { user, signOut, loading: authLoading } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(() => {
+    return localStorage.getItem('devdown_guest_mode') === 'true';
+  });
   const { settings, updateSettings, resetSettings } = useSettings();
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -67,6 +72,12 @@ export default function App() {
   const activeDoc = documents.find(d => d.id === activeId) || documents[0];
 
   // Initial Data Load & Provider Switch
+  const handleLogout = async () => {
+    await signOut();
+    setIsGuestMode(false);
+    localStorage.removeItem('devdown_guest_mode');
+  };
+
   useEffect(() => {
     const initStorage = async () => {
       // In the future, we will handle Google Token here
@@ -359,7 +370,7 @@ export default function App() {
     setTimeout(() => setIsSharing(false), 2000);
   };
 
-  if (!mounted) return null;
+  if (!mounted || authLoading) return null;
 
   return (
     <div className="flex h-screen w-full bg-background transition-colors duration-500 overflow-hidden text-foreground selection:bg-primary/20">
@@ -392,10 +403,27 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         user={user}
         onLogin={() => setIsLoginOpen(true)}
-        onLogout={signOut}
+        onLogout={handleLogout}
       />
 
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      <LoginModal 
+        isOpen={isLoginOpen} 
+        onClose={() => setIsLoginOpen(false)} 
+        initialSignUp={isSignUpMode}
+      />
+
+      <AnimatePresence>
+        {(!user && !isGuestMode && !authLoading) && (
+          <LandingPage 
+            onLogin={() => { setIsSignUpMode(false); setIsLoginOpen(true); }}
+            onSignUp={() => { setIsSignUpMode(true); setIsLoginOpen(true); }}
+            onContinueAsGuest={() => {
+              setIsGuestMode(true);
+              localStorage.setItem('devdown_guest_mode', 'true');
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <div className={cn(
         "flex-1 flex flex-col min-w-0 relative h-full overflow-hidden transition-all duration-500",

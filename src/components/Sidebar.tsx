@@ -463,13 +463,29 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
                   <span className="text-[10px] text-muted-foreground">Local storage only</span>
                 </div>
               </div>
-              <button
-                onClick={onLogin}
-                className="p-2.5 bg-primary text-primary-foreground rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                title="Sign In"
-              >
-                <LogIn className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onOpenSettings}
+                  className="p-2 hover:bg-muted text-muted-foreground hover:text-primary rounded-lg transition-all"
+                  title="Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-all"
+                  title="Exit Guest Mode"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={onLogin}
+                  className="ml-1 p-2 bg-primary text-primary-foreground rounded-lg shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                  title="Sign In"
+                >
+                  <LogIn className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>
