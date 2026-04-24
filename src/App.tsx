@@ -17,6 +17,9 @@ import QuickOpen from './components/QuickOpen';
 import ConfirmModal from './components/ConfirmModal';
 import Breadcrumbs from './components/Breadcrumbs';
 import { type SidebarHandle } from './components/Sidebar';
+import { useAuth } from './hooks/useAuth';
+import LoginModal from './components/Auth/LoginModal';
+import { storageManager } from './lib/storage/StorageManager';
 
 const DEFAULT_DOCS: Document[] = [
   {
@@ -31,26 +34,8 @@ const DEFAULT_DOCS: Document[] = [
 const DEFAULT_FOLDERS: Folder[] = [];
 
 export default function App() {
-  const [documents, setDocuments] = useState<Document[]>(() => {
-    try {
-      const saved = localStorage.getItem('devdown_docs');
-      const docs: Document[] = saved ? JSON.parse(saved) : DEFAULT_DOCS;
-      // Ensure all docs have folderId
-      return docs.map(d => ({ ...d, folderId: d.folderId || null }));
-    } catch (err) {
-      console.error('Failed to parse documents from localStorage:', err);
-      return DEFAULT_DOCS;
-    }
-  });
-  const [folders, setFolders] = useState<Folder[]>(() => {
-    try {
-      const saved = localStorage.getItem('devdown_folders');
-      return saved ? JSON.parse(saved) : DEFAULT_FOLDERS;
-    } catch (err) {
-      console.error('Failed to parse folders from localStorage:', err);
-      return DEFAULT_FOLDERS;
-    }
-  });
+  const [documents, setDocuments] = useState<Document[]>(DEFAULT_DOCS);
+  const [folders, setFolders] = useState<Folder[]>(DEFAULT_FOLDERS);
   const [activeId, setActiveId] = useState(documents[0].id);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
   const [isEditorDark, setIsEditorDark] = useState(false);
@@ -68,6 +53,8 @@ export default function App() {
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [deleteContentsChecked, setDeleteContentsChecked] = useState(false);
 
+  const { user, signOut, loading: authLoading } = useAuth();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const { settings, updateSettings, resetSettings } = useSettings();
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -79,12 +66,44 @@ export default function App() {
 
   const activeDoc = documents.find(d => d.id === activeId) || documents[0];
 
-  // Persistence
+  // Initial Data Load & Provider Switch
   useEffect(() => {
-    localStorage.setItem('devdown_docs', JSON.stringify(documents));
-    localStorage.setItem('devdown_folders', JSON.stringify(folders));
-    localStorage.setItem('devdown_palette', palette);
-  }, [documents, folders, palette]);
+    const initStorage = async () => {
+      // In the future, we will handle Google Token here
+      await storageManager.setProvider(user ? 'local' : 'local'); 
+      
+      const [loadedDocs, loadedFolders] = await Promise.all([
+        storageManager.getDocuments(),
+        storageManager.getFolders()
+      ]);
+      
+      if (loadedDocs.length > 0) setDocuments(loadedDocs);
+      if (loadedFolders.length > 0) setFolders(loadedFolders);
+      if (loadedDocs.length > 0) setActiveId(loadedDocs[0].id);
+    };
+
+    initStorage();
+  }, [user]);
+
+  // Persistence (Auto-save)
+  useEffect(() => {
+    // Only save if mounted and we have data
+    if (!mounted) return;
+
+    const saveTimeout = setTimeout(async () => {
+      // We save the whole collection for local providers
+      // For Google Drive, we will eventually do more efficient syncing
+      for (const doc of documents) {
+        await storageManager.saveDocument(doc);
+      }
+      for (const folder of folders) {
+        await storageManager.saveFolder(folder);
+      }
+      localStorage.setItem('devdown_palette', palette);
+    }, 500);
+
+    return () => clearTimeout(saveTimeout);
+  }, [documents, folders, palette, mounted]);
 
   // Theme logic
   useEffect(() => {
@@ -371,7 +390,12 @@ export default function App() {
         theme={theme} setTheme={setTheme}
         palette={palette} setPalette={setPalette}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        user={user}
+        onLogin={() => setIsLoginOpen(true)}
+        onLogout={signOut}
       />
+
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
       <div className={cn(
         "flex-1 flex flex-col min-w-0 relative h-full overflow-hidden transition-all duration-500",
