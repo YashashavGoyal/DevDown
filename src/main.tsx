@@ -4,9 +4,12 @@ import './index.css'
 import 'github-markdown-css/github-markdown.css'
 import 'katex/dist/katex.min.css'
 import App from './App.tsx'
+import { AuthProvider } from './hooks/useAuth.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </StrictMode>,
 )

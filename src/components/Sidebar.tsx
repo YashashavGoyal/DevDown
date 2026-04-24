@@ -2,11 +2,12 @@ import { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileText, Plus, Search, Trash2,
-  Settings, Zap, Layout, X, Palette,
+  Settings, Layout, X, Palette,
   Sun, Moon, Monitor, FolderOpen,
   FolderPlus, Folder, ChevronRight,
-  ChevronDown, FolderInput
+  ChevronDown, FolderInput, LogIn, LogOut, User as UserIcon
 } from 'lucide-react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { cn } from '../lib/utils';
 
 export interface Folder {
@@ -43,6 +44,9 @@ interface SidebarProps {
   palette: 'default' | 'velvet' | 'slate' | 'forest' | 'midnight';
   setPalette: (p: 'default' | 'velvet' | 'slate' | 'forest' | 'midnight') => void;
   onOpenSettings: () => void;
+  user: SupabaseUser | null;
+  onLogin: () => void;
+  onLogout: () => void;
 }
 
 export interface SidebarHandle {
@@ -68,7 +72,10 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
   setTheme,
   palette,
   setPalette,
-  onOpenSettings
+  onOpenSettings,
+  user,
+  onLogin,
+  onLogout
 }, ref) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -416,17 +423,71 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
           </div>
         </div>
 
-        <div className="glass-inset rounded-2xl p-4 flex items-center justify-between bg-muted/20 border border-border/50">
-          <div className="flex items-center gap-2">
-            <div className="bg-amber-500/10 p-1 rounded-lg">
-              <Zap className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+        <div className="glass-inset rounded-2xl p-4 bg-muted/20 border border-border/50">
+          {user ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                  <UserIcon className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-bold truncate">{user.email?.split('@')[0]}</span>
+                  <span className="text-[10px] text-muted-foreground truncate">{user.email}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onOpenSettings}
+                  className="p-2 hover:bg-primary/10 text-muted-foreground hover:text-primary rounded-lg transition-all"
+                  title="Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-all"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <span className="text-xs font-bold tracking-tight">Pro Account</span>
-          </div>
-          <Settings
-            onClick={onOpenSettings}
-            className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-primary transition-all hover:rotate-90"
-          />
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center border border-border">
+                  <UserIcon className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold">Guest Mode</span>
+                  <span className="text-[10px] text-muted-foreground">Local storage only</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={onOpenSettings}
+                  className="p-2 hover:bg-muted text-muted-foreground hover:text-primary rounded-lg transition-all"
+                  title="Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={onLogout}
+                  className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-lg transition-all"
+                  title="Exit Guest Mode"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={onLogin}
+                  className="ml-1 p-2 bg-primary text-primary-foreground rounded-lg shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                  title="Sign In"
+                >
+                  <LogIn className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </aside>
