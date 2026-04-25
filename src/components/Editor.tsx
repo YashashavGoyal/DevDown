@@ -20,10 +20,9 @@ interface EditorProps {
 }
 
 import { cn } from '../lib/utils';
-import logoTransparent from '../assets/logo-transparent.png';
 
-const Editor: React.FC<EditorProps> = ({ 
-  value, onChange, onScroll, containerRef, 
+const Editor: React.FC<EditorProps> = ({
+  value, onChange, onScroll, containerRef,
   isDark, onEditorCreate, onAction,
   fontSize, lineNumbers, lineWrapping
 }) => {
@@ -65,17 +64,17 @@ const Editor: React.FC<EditorProps> = ({
     ];
 
     if (lineWrapping) list.push(EditorView.lineWrapping);
-    
+
     return list;
   }, [fontSize, lineNumbers, lineWrapping, onAction]);
-// Note: onAction is now memoized in App.tsx, so this won't trigger on every keystroke.
+  // Note: onAction is now memoized in App.tsx, so this won't trigger on every keystroke.
 
   const handleChange = useCallback((val: string) => {
     onChange(val);
   }, [onChange]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={cn("h-full w-full overflow-hidden relative group/editor")}
       onScroll={onScroll}
@@ -95,15 +94,7 @@ const Editor: React.FC<EditorProps> = ({
         }}
         className="h-full outline-none"
       />
-      
-      {/* Watermark Logo */}
-      <div className="absolute bottom-8 right-8 pointer-events-none opacity-20 group-hover/editor:opacity-40 transition-opacity duration-700 select-none">
-        <img 
-          src={logoTransparent} 
-          alt="" 
-          className="w-80 h-80 object-contain grayscale brightness-0 invert dark:invert-0"
-        />
-      </div>
+
     </div>
   );
 };
