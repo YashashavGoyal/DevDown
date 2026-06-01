@@ -373,6 +373,7 @@ export default function App() {
         theme={theme} setTheme={setTheme}
         palette={palette} setPalette={setPalette}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        isDark={isEditorDark}
       />
 
       <div className={cn(

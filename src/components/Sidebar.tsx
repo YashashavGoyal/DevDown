@@ -45,6 +45,7 @@ interface SidebarProps {
   palette: 'default' | 'velvet' | 'slate' | 'forest' | 'midnight';
   setPalette: (p: 'default' | 'velvet' | 'slate' | 'forest' | 'midnight') => void;
   onOpenSettings: () => void;
+  isDark?: boolean;
 }
 
 export interface SidebarHandle {
@@ -70,7 +71,8 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
   setTheme,
   palette,
   setPalette,
-  onOpenSettings
+  onOpenSettings,
+  isDark = false
 }, ref) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -309,7 +311,7 @@ const Sidebar = forwardRef<SidebarHandle, SidebarProps>(({
           <div className="relative group/logo">
             <div className="absolute -inset-2 bg-primary/20 rounded-xl blur-xl opacity-0 group-hover/logo:opacity-100 transition-opacity duration-500" />
             <img 
-              src={theme === 'dark' ? logoDark : logoLight} 
+              src={isDark ? logoDark : logoLight} 
               alt="DevDown Logo" 
               className="w-8 h-8 rounded-lg shadow-lg relative z-10 transition-transform group-hover/logo:scale-110 duration-300"
             />

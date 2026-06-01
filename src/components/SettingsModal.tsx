@@ -383,7 +383,7 @@ const DataAction = ({ icon: Icon, title, description, onClick, highlight = false
   >
     <div className={cn(
       "p-2.5 rounded-xl transition-colors",
-      highlight ? "bg-primary text-primary" : "bg-muted text-muted-foreground group-hover:text-primary"
+      highlight ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:text-primary"
     )}>
       <Icon className="w-5 h-5" />
     </div>
