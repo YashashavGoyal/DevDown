@@ -58,8 +58,17 @@ const Editor: React.FC<EditorProps> = ({
         { key: "Mod-b", run: () => { onAction?.('bold'); return true; } },
         { key: "Mod-i", run: () => { onAction?.('italic'); return true; } },
         { key: "Mod-k", run: () => { onAction?.('link'); return true; } },
-        { key: "Mod-Shift-k", run: () => { onAction?.('code'); return true; } },
+        { key: "Alt-Shift-k", run: () => { onAction?.('code'); return true; } },
         { key: "Mod-q", run: () => { onAction?.('quote'); return true; } },
+        { key: "Alt-Shift-1", run: () => { onAction?.('heading1'); return true; } },
+        { key: "Alt-Shift-2", run: () => { onAction?.('heading2'); return true; } },
+        { key: "Alt-Shift-i", run: () => { onAction?.('image'); return true; } },
+        { key: "Alt-Shift-l", run: () => { onAction?.('list'); return true; } },
+        { key: "Alt-Shift-o", run: () => { onAction?.('list-ordered'); return true; } },
+        { key: "Alt-Shift-t", run: () => { onAction?.('table'); return true; } },
+        { key: "Alt-Shift-m", run: () => { onAction?.('math'); return true; } },
+        { key: "Alt-Shift-g", run: () => { onAction?.('mermaid-graph'); return true; } },
+        { key: "Alt-Shift-s", run: () => { onAction?.('mermaid-sequence'); return true; } },
       ])
     ];
 
@@ -91,6 +100,7 @@ const Editor: React.FC<EditorProps> = ({
           foldGutter: lineNumbers,
           highlightActiveLine: true,
           autocompletion: true,
+          searchKeymap: true,
         }}
         className="h-full outline-none"
       />

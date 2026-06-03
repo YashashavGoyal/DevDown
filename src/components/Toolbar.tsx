@@ -57,22 +57,22 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, className }) => {
         <Button icon={Type} onClick={() => onAction('bold')} title="Bold (Ctrl+B)" />
         <Button icon={Italic} onClick={() => onAction('italic')} title="Italic (Ctrl+I)" />
         <Divider />
-        <Button icon={Heading1} onClick={() => onAction('heading1')} title="Heading 1" />
-        <Button icon={Heading2} onClick={() => onAction('heading2')} title="Heading 2" />
-        <Button icon={Quote} onClick={() => onAction('quote')} title="Blockquote" />
+        <Button icon={Heading1} onClick={() => onAction('heading1')} title="Heading 1 (Alt+Shift+1)" />
+        <Button icon={Heading2} onClick={() => onAction('heading2')} title="Heading 2 (Alt+Shift+2)" />
+        <Button icon={Quote} onClick={() => onAction('quote')} title="Blockquote (Ctrl+Q)" />
         <Divider />
-        <Button icon={Link} onClick={() => onAction('link')} title="Link" />
-        <Button icon={Image} onClick={() => onAction('image')} title="Image" />
+        <Button icon={Link} onClick={() => onAction('link')} title="Link (Ctrl+K)" />
+        <Button icon={Image} onClick={() => onAction('image')} title="Image (Alt+Shift+I)" />
         <Divider />
-        <Button icon={List} onClick={() => onAction('list')} title="Bullet List" />
-        <Button icon={ListOrdered} onClick={() => onAction('list-ordered')} title="Numbered List" />
+        <Button icon={List} onClick={() => onAction('list')} title="Bullet List (Alt+Shift+L)" />
+        <Button icon={ListOrdered} onClick={() => onAction('list-ordered')} title="Numbered List (Alt+Shift+O)" />
         <Divider />
-        <Button icon={Code} onClick={() => onAction('code')} title="Code Block" />
-        <Button icon={Table} onClick={() => onAction('table')} title="Table" />
+        <Button icon={Code} onClick={() => onAction('code')} title="Code Block (Alt+Shift+K)" />
+        <Button icon={Table} onClick={() => onAction('table')} title="Table (Alt+Shift+T)" />
         <Divider />
-        <Button icon={SquareFunction} onClick={() => onAction('math')} title="Math Formula (KaTeX)" />
-        <Button icon={LayoutDashboard} onClick={() => onAction('mermaid-graph')} title="Mermaid Flowchart" />
-        <Button icon={GitMerge} onClick={() => onAction('mermaid-sequence')} title="Mermaid Sequence" />
+        <Button icon={SquareFunction} onClick={() => onAction('math')} title="Math Formula (Alt+Shift+M)" />
+        <Button icon={LayoutDashboard} onClick={() => onAction('mermaid-graph')} title="Mermaid Flowchart (Alt+Shift+G)" />
+        <Button icon={GitMerge} onClick={() => onAction('mermaid-sequence')} title="Mermaid Sequence (Alt+Shift+S)" />
       </div>
     </div>
   );
