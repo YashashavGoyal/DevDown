@@ -21,8 +21,8 @@ interface EditorProps {
 
 import { cn } from '../lib/utils';
 
-const Editor: React.FC<EditorProps> = ({ 
-  value, onChange, onScroll, containerRef, 
+const Editor: React.FC<EditorProps> = ({
+  value, onChange, onScroll, containerRef,
   isDark, onEditorCreate, onAction,
   fontSize, lineNumbers, lineWrapping
 }) => {
@@ -64,19 +64,19 @@ const Editor: React.FC<EditorProps> = ({
     ];
 
     if (lineWrapping) list.push(EditorView.lineWrapping);
-    
+
     return list;
   }, [fontSize, lineNumbers, lineWrapping, onAction]);
-// Note: onAction is now memoized in App.tsx, so this won't trigger on every keystroke.
+  // Note: onAction is now memoized in App.tsx, so this won't trigger on every keystroke.
 
   const handleChange = useCallback((val: string) => {
     onChange(val);
   }, [onChange]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className={cn("h-full w-full overflow-hidden")}
+      className={cn("h-full w-full overflow-hidden relative group/editor")}
       onScroll={onScroll}
     >
       <CodeMirror
@@ -94,6 +94,7 @@ const Editor: React.FC<EditorProps> = ({
         }}
         className="h-full outline-none"
       />
+
     </div>
   );
 };
