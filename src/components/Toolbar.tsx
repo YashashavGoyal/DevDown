@@ -7,6 +7,12 @@ import {
 import { cn } from '../lib/utils';
 import { type LucideIcon } from 'lucide-react';
 
+const isMac = typeof window !== 'undefined' && navigator.platform.includes('Mac');
+
+const getShortcutLabel = (windowsLabel: string, macLabel: string) => {
+  return isMac ? macLabel : windowsLabel;
+};
+
 export type MarkdownAction = 
   | 'bold' | 'italic' | 'heading1' | 'heading2' | 'quote' 
   | 'link' | 'image' | 'list' | 'list-ordered' | 'code' | 'table' 
@@ -54,25 +60,25 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, className }) => {
       className
     )}>
       <div className="flex items-center gap-1 px-2">
-        <Button icon={Type} onClick={() => onAction('bold')} title="Bold (Ctrl+B)" />
-        <Button icon={Italic} onClick={() => onAction('italic')} title="Italic (Ctrl+I)" />
+        <Button icon={Type} onClick={() => onAction('bold')} title={`Bold (${getShortcutLabel('Ctrl+B', '⌘B')})`} />
+        <Button icon={Italic} onClick={() => onAction('italic')} title={`Italic (${getShortcutLabel('Ctrl+I', '⌘I')})`} />
         <Divider />
-        <Button icon={Heading1} onClick={() => onAction('heading1')} title="Heading 1 (Alt+Shift+1)" />
-        <Button icon={Heading2} onClick={() => onAction('heading2')} title="Heading 2 (Alt+Shift+2)" />
-        <Button icon={Quote} onClick={() => onAction('quote')} title="Blockquote (Ctrl+Q)" />
+        <Button icon={Heading1} onClick={() => onAction('heading1')} title={`Heading 1 (${getShortcutLabel('Alt+Shift+1', '⌥⇧1')})`} />
+        <Button icon={Heading2} onClick={() => onAction('heading2')} title={`Heading 2 (${getShortcutLabel('Alt+Shift+2', '⌥⇧2')})`} />
+        <Button icon={Quote} onClick={() => onAction('quote')} title={`Blockquote (${getShortcutLabel('Ctrl+Q', '⌘Q')})`} />
         <Divider />
-        <Button icon={Link} onClick={() => onAction('link')} title="Link (Ctrl+K)" />
-        <Button icon={Image} onClick={() => onAction('image')} title="Image (Alt+Shift+I)" />
+        <Button icon={Link} onClick={() => onAction('link')} title={`Link (${getShortcutLabel('Ctrl+K', '⌘K')})`} />
+        <Button icon={Image} onClick={() => onAction('image')} title={`Image (${getShortcutLabel('Alt+Shift+I', '⌥⇧I')})`} />
         <Divider />
-        <Button icon={List} onClick={() => onAction('list')} title="Bullet List (Alt+Shift+L)" />
-        <Button icon={ListOrdered} onClick={() => onAction('list-ordered')} title="Numbered List (Alt+Shift+O)" />
+        <Button icon={List} onClick={() => onAction('list')} title={`Bullet List (${getShortcutLabel('Alt+Shift+L', '⌥⇧L')})`} />
+        <Button icon={ListOrdered} onClick={() => onAction('list-ordered')} title={`Numbered List (${getShortcutLabel('Alt+Shift+O', '⌥⇧O')})`} />
         <Divider />
-        <Button icon={Code} onClick={() => onAction('code')} title="Code Block (Alt+Shift+K)" />
-        <Button icon={Table} onClick={() => onAction('table')} title="Table (Alt+Shift+T)" />
+        <Button icon={Code} onClick={() => onAction('code')} title={`Code Block (${getShortcutLabel('Alt+Shift+K', '⌥⇧K')})`} />
+        <Button icon={Table} onClick={() => onAction('table')} title={`Table (${getShortcutLabel('Alt+Shift+T', '⌥⇧T')})`} />
         <Divider />
-        <Button icon={SquareFunction} onClick={() => onAction('math')} title="Math Formula (Alt+Shift+M)" />
-        <Button icon={LayoutDashboard} onClick={() => onAction('mermaid-graph')} title="Mermaid Flowchart (Alt+Shift+G)" />
-        <Button icon={GitMerge} onClick={() => onAction('mermaid-sequence')} title="Mermaid Sequence (Alt+Shift+S)" />
+        <Button icon={SquareFunction} onClick={() => onAction('math')} title={`Math Formula (${getShortcutLabel('Alt+Shift+M', '⌥⇧M')})`} />
+        <Button icon={LayoutDashboard} onClick={() => onAction('mermaid-graph')} title={`Mermaid Flowchart (${getShortcutLabel('Alt+Shift+G', '⌥⇧G')})`} />
+        <Button icon={GitMerge} onClick={() => onAction('mermaid-sequence')} title={`Mermaid Sequence (${getShortcutLabel('Alt+Shift+S', '⌥⇧S')})`} />
       </div>
     </div>
   );

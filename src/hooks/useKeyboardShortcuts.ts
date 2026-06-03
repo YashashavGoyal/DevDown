@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { type MarkdownAction } from '../components/Toolbar';
+import { type SidebarHandle } from '../components/Sidebar';
+import { type EditorView } from '@codemirror/view';
 
 interface UseKeyboardShortcutsProps {
   isSettingsOpen: boolean;
@@ -9,8 +11,8 @@ interface UseKeyboardShortcutsProps {
   zenMode: boolean;
   updateSettings: (updates: { zenMode: boolean }) => void;
   setIsSidebarOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
-  sidebarRef: React.RefObject<any>;
-  editorViewRef: React.RefObject<any>;
+  sidebarRef: React.RefObject<SidebarHandle | null>;
+  editorViewRef: React.RefObject<EditorView | null>;
   createNewDoc: () => void;
   deleteDoc: (id: string) => void;
   activeId: string;
@@ -39,6 +41,13 @@ export function useKeyboardShortcuts({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.defaultPrevented) return;
+
+      const target = e.target as HTMLElement;
+      const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+      if (isTyping && e.key !== 'Escape') {
+        return;
+      }
+
       const isMod = (navigator.platform.includes('Mac') ? e.metaKey : e.ctrlKey);
 
       if (e.key === 'Escape') {
