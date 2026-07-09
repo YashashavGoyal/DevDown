@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "desktop-preview": "tauri dev",
+    "desktop-build": "tauri build"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
