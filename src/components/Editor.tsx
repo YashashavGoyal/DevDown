@@ -58,7 +58,6 @@ const Editor: React.FC<EditorProps> = ({
         { key: "Mod-b", run: () => { onAction?.('bold'); return true; } },
         { key: "Mod-i", run: () => { onAction?.('italic'); return true; } },
         { key: "Mod-k", run: () => { onAction?.('link'); return true; } },
-        { key: "Mod-Shift-k", run: () => { onAction?.('code'); return true; } },
         { key: "Mod-q", run: () => { onAction?.('quote'); return true; } },
       ])
     ];
@@ -91,6 +90,7 @@ const Editor: React.FC<EditorProps> = ({
           foldGutter: lineNumbers,
           highlightActiveLine: true,
           autocompletion: true,
+          searchKeymap: true,
         }}
         className="h-full outline-none"
       />

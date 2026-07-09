@@ -12,6 +12,7 @@ import Toolbar, { type MarkdownAction } from './components/Toolbar';
 import { EditorView } from '@codemirror/view';
 import { cn, generateId } from './lib/utils';
 import { useSettings } from './hooks/useSettings';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import SettingsModal from './components/SettingsModal';
 import QuickOpen from './components/QuickOpen';
 import ConfirmModal from './components/ConfirmModal';
@@ -125,33 +126,6 @@ export default function App() {
     setTimeout(() => { isScrolling.current = null; }, 50);
   }, []);
 
-  // Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMod = (navigator.platform.includes('Mac') ? e.metaKey : e.ctrlKey);
-
-      if (e.key === 'Escape') {
-        if (isSettingsOpen) setIsSettingsOpen(false);
-        if (isQuickOpenOpen) setIsQuickOpenOpen(false);
-        if (settings.zenMode) updateSettings({ zenMode: false });
-      }
-
-      if (isMod && (e.key === '/' || e.key === 'f')) {
-        e.preventDefault();
-        setIsSidebarOpen(true);
-        setTimeout(() => sidebarRef.current?.focusSearch(), 100);
-      }
-
-      if (isMod && e.key === 'p') {
-        e.preventDefault();
-        setIsQuickOpenOpen(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSettingsOpen, isQuickOpenOpen, settings.zenMode, updateSettings]);
-
   // Editor Actions
   const handleToolbarAction = useCallback((action: MarkdownAction) => {
     if (!editorViewRef.current) return;
@@ -197,7 +171,7 @@ export default function App() {
     setDocuments(docs => docs.map(d => d.id === activeId ? { ...d, content: val, updatedAt: Date.now() } : d));
   }, [activeId]);
 
-  const createNewDoc = (folderId: string | null = null) => {
+  const createNewDoc = useCallback((folderId: string | null = null) => {
     const newDoc: Document = {
       id: generateId(),
       title: 'New Note',
@@ -205,9 +179,9 @@ export default function App() {
       updatedAt: Date.now(),
       folderId
     };
-    setDocuments([newDoc, ...documents]);
+    setDocuments(prev => [newDoc, ...prev]);
     setActiveId(newDoc.id);
-  };
+  }, []);
 
   const createNewFolder = (parentId: string | null = null) => {
     const newFolder: Folder = {
@@ -272,10 +246,13 @@ export default function App() {
     if (docs[0]) setActiveId(docs[0].id);
   };
 
-  const deleteDoc = (id: string) => {
-    if (documents.length === 1) return;
-    setDocToDelete(id);
-  };
+  const deleteDoc = useCallback((id: string) => {
+    setDocuments(prev => {
+      if (prev.length === 1) return prev;
+      setDocToDelete(id);
+      return prev;
+    });
+  }, []);
 
   const handleConfirmDelete = () => {
     if (!docToDelete) return;
@@ -336,11 +313,30 @@ export default function App() {
     e.target.value = '';
   };
 
-  const handleShare = () => {
+  const handleShare = useCallback(() => {
     navigator.clipboard.writeText(activeDoc.content);
     setIsSharing(true);
     setTimeout(() => setIsSharing(false), 2000);
-  };
+  }, [activeDoc.content]);
+
+  // Shortcuts Hook
+  useKeyboardShortcuts({
+    isSettingsOpen,
+    setIsSettingsOpen,
+    isQuickOpenOpen,
+    setIsQuickOpenOpen,
+    zenMode: settings.zenMode,
+    updateSettings,
+    setIsSidebarOpen,
+    sidebarRef,
+    editorViewRef,
+    createNewDoc,
+    deleteDoc,
+    activeId,
+    setViewMode,
+    handleShare,
+    handleToolbarAction,
+  });
 
   if (!mounted) return null;
 
@@ -391,9 +387,9 @@ export default function App() {
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <img 
-                src={isEditorDark ? logoDark : logoLight} 
-                alt="DevDown" 
+              <img
+                src={isEditorDark ? logoDark : logoLight}
+                alt="DevDown"
                 className="w-6 h-6 rounded-md shadow-sm hidden sm:block"
               />
               <div className="flex flex-col min-w-0">

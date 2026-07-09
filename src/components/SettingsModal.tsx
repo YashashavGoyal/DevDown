@@ -264,17 +264,39 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               )}
 
               {activeTab === 'shortcuts' && (
-                <div className="space-y-6">
-                  <Section title="Keyboard Shortcuts">
-                    <div className="space-y-2">
-                      <ShortcutItem keys={['Mod', '/']} label="Focus Search" />
+                <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                  <Section title="Application Controls">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <ShortcutItem keys={['Mod', 'Shift', 'F']} label="Focus Sidebar Search" />
                       <ShortcutItem keys={['Mod', 'P']} label="Quick Open Switcher" />
+                      <ShortcutItem keys={['Mod', '\\']} label="Toggle Sidebar" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'V']} label="Cycle View Mode" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'Z']} label="Toggle Zen Mode" />
+                      <ShortcutItem keys={['Mod', ',']} label="Open Settings" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'N']} label="Create New Note" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'D']} label="Delete Current Note" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'C']} label="Share / Copy Note" />
+                      <ShortcutItem keys={['Esc']} label="Exit Zen Mode / Close Modals" />
+                    </div>
+                  </Section>
+
+                  <Section title="Markdown Editor Formatting">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <ShortcutItem keys={['Mod', 'B']} label="Bold Text" />
                       <ShortcutItem keys={['Mod', 'I']} label="Italic Text" />
-                      <ShortcutItem keys={['Mod', 'K']} label="Insert Link" />
-                      <ShortcutItem keys={['Mod', 'Shift', 'K']} label="Insert Code" />
+                      <ShortcutItem keys={['Mod', 'F']} label="Find Text in Note" />
+                      <ShortcutItem keys={['Alt', 'Shift', '1']} label="Heading 1" />
+                      <ShortcutItem keys={['Alt', 'Shift', '2']} label="Heading 2" />
                       <ShortcutItem keys={['Mod', 'Q']} label="Blockquote" />
-                      <ShortcutItem keys={['Esc']} label="Exit Zen Mode / Close Modals" />
+                      <ShortcutItem keys={['Mod', 'K']} label="Insert Link" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'I']} label="Insert Image" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'K']} label="Insert Code Block" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'L']} label="Bullet List" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'O']} label="Numbered List" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'T']} label="Insert Table" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'M']} label="Math Formula (KaTeX)" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'G']} label="Mermaid Flowchart" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'S']} label="Mermaid Sequence" />
                     </div>
                   </Section>
                 </div>
