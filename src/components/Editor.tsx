@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -9,7 +9,7 @@ import { type MarkdownAction } from './Toolbar';
 interface EditorProps {
   value: string;
   onChange: (value: string) => void;
-  onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
+  onScroll?: (e: React.UIEvent<HTMLDivElement> | Event) => void;
   containerRef?: React.RefObject<HTMLDivElement | null>;
   isDark?: boolean;
   onEditorCreate?: (view: EditorView) => void;
@@ -53,6 +53,12 @@ const Editor: React.FC<EditorProps> = ({
           display: lineNumbers ? "flex" : "none",
         }
       }),
+      EditorView.domEventHandlers({
+        scroll: (event) => {
+          onScroll?.(event);
+          return false;
+        }
+      }),
       EditorState.tabSize.of(4),
       keymap.of([
         { key: "Mod-b", run: () => { onAction?.('bold'); return true; } },
@@ -65,38 +71,53 @@ const Editor: React.FC<EditorProps> = ({
     if (lineWrapping) list.push(EditorView.lineWrapping);
 
     return list;
-  }, [fontSize, lineNumbers, lineWrapping, onAction]);
-  // Note: onAction is now memoized in App.tsx, so this won't trigger on every keystroke.
+}, [fontSize, lineNumbers, lineWrapping, onAction, onScroll]);
+// Note: onAction is memoized in App.tsx
 
-  const handleChange = useCallback((val: string) => {
-    onChange(val);
-  }, [onChange]);
+// Attach capture-phase scroll listener to catch .cm-scroller scroll events
+useEffect(() => {
+  const container = containerRef?.current;
+  if (!container || !onScroll) return;
 
-  return (
-    <div
-      ref={containerRef}
-      className={cn("h-full w-full overflow-hidden relative group/editor")}
-      onScroll={onScroll}
-    >
-      <CodeMirror
-        value={value}
-        height="100%"
-        theme={isDark ? 'dark' : 'light'}
-        onCreateEditor={onEditorCreate}
-        extensions={extensions}
-        onChange={handleChange}
-        basicSetup={{
-          lineNumbers: lineNumbers,
-          foldGutter: lineNumbers,
-          highlightActiveLine: true,
-          autocompletion: true,
-          searchKeymap: true,
-        }}
-        className="h-full outline-none"
-      />
+  const handleContainerScroll = (e: Event) => {
+    onScroll(e);
+  };
 
-    </div>
-  );
+  container.addEventListener('scroll', handleContainerScroll, { capture: true, passive: true });
+  return () => {
+    container.removeEventListener('scroll', handleContainerScroll, { capture: true });
+  };
+}, [containerRef, onScroll]);
+
+const handleChange = useCallback((val: string) => {
+  onChange(val);
+}, [onChange]);
+
+return (
+  <div
+    ref={containerRef}
+    className={cn("h-full w-full overflow-hidden relative group/editor")}
+    onScroll={onScroll}
+  >
+    <CodeMirror
+      value={value}
+      height="100%"
+      theme={isDark ? 'dark' : 'light'}
+      onCreateEditor={onEditorCreate}
+      extensions={extensions}
+      onChange={handleChange}
+      basicSetup={{
+        lineNumbers: lineNumbers,
+        foldGutter: lineNumbers,
+        highlightActiveLine: true,
+        autocompletion: true,
+        searchKeymap: true,
+      }}
+      className="h-full outline-none"
+    />
+
+  </div>
+);
 };
 
 export default Editor;

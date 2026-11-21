@@ -78,7 +78,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ onAction, className }) => {
         <Divider />
         <Button icon={SquareFunction} onClick={() => onAction('math')} title={`Math Formula (${getShortcutLabel('Alt+Shift+M', '⌥⇧M')})`} />
         <Button icon={LayoutDashboard} onClick={() => onAction('mermaid-graph')} title={`Mermaid Flowchart (${getShortcutLabel('Alt+Shift+G', '⌥⇧G')})`} />
-        <Button icon={GitMerge} onClick={() => onAction('mermaid-sequence')} title={`Mermaid Sequence (${getShortcutLabel('Alt+Shift+S', '⌥⇧S')})`} />
+        <Button icon={GitMerge} onClick={() => onAction('mermaid-sequence')} title={`Mermaid Sequence (${getShortcutLabel('Alt+Shift+E', '⌥⇧E')})`} />
       </div>
     </div>
   );

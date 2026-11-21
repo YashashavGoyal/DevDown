@@ -8,6 +8,7 @@ export interface AppSettings {
   zenMode: boolean;
   autoSave: boolean;
   showToolbarInZen: boolean;
+  syncScroll: boolean;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   zenMode: false,
   autoSave: true,
   showToolbarInZen: false,
+  syncScroll: true,
 };
 
 /**

@@ -174,6 +174,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                   <Section title="Editor Behavior">
                     <SettingToggle
+                      label="Synchronized Scrolling"
+                      description="Scroll editor and preview panes together in split view"
+                      checked={settings.syncScroll}
+                      onChange={(val) => updateSettings({ syncScroll: val })}
+                    />
+                    <SettingToggle
                       label="Line Numbers"
                       description="Show line numbers on the left gutter"
                       checked={settings.lineNumbers}
@@ -271,6 +277,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <ShortcutItem keys={['Mod', 'P']} label="Quick Open Switcher" />
                       <ShortcutItem keys={['Mod', '\\']} label="Toggle Sidebar" />
                       <ShortcutItem keys={['Alt', 'Shift', 'V']} label="Cycle View Mode" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'S']} label="Toggle Sync Scroll" />
                       <ShortcutItem keys={['Alt', 'Shift', 'Z']} label="Toggle Zen Mode" />
                       <ShortcutItem keys={['Mod', ',']} label="Open Settings" />
                       <ShortcutItem keys={['Alt', 'Shift', 'N']} label="Create New Note" />
@@ -296,7 +303,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       <ShortcutItem keys={['Alt', 'Shift', 'T']} label="Insert Table" />
                       <ShortcutItem keys={['Alt', 'Shift', 'M']} label="Math Formula (KaTeX)" />
                       <ShortcutItem keys={['Alt', 'Shift', 'G']} label="Mermaid Flowchart" />
-                      <ShortcutItem keys={['Alt', 'Shift', 'S']} label="Mermaid Sequence" />
+                      <ShortcutItem keys={['Alt', 'Shift', 'E']} label="Mermaid Sequence" />
                     </div>
                   </Section>
                 </div>

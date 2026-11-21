@@ -19,6 +19,7 @@ interface UseKeyboardShortcutsProps {
   setViewMode: React.Dispatch<React.SetStateAction<'split' | 'edit' | 'view'>>;
   handleShare: () => void;
   handleToolbarAction: (action: MarkdownAction) => void;
+  toggleSyncScroll: () => void;
 }
 
 export function useKeyboardShortcuts({
@@ -37,6 +38,7 @@ export function useKeyboardShortcuts({
   setViewMode,
   handleShare,
   handleToolbarAction,
+  toggleSyncScroll,
 }: UseKeyboardShortcutsProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -95,6 +97,12 @@ export function useKeyboardShortcuts({
           if (current === 'edit') return 'view';
           return 'split';
         });
+      }
+
+      // Alt+Shift+S: Toggle Sync Scroll
+      if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 's' || e.code === 'KeyS')) {
+        e.preventDefault();
+        toggleSyncScroll();
       }
 
       // Mod+\: Toggle Sidebar
@@ -160,31 +168,31 @@ export function useKeyboardShortcuts({
           handleToolbarAction('mermaid-graph');
         }
 
-        // Mermaid Sequence: Alt+Shift+S
-        if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 's' || e.code === 'KeyS')) {
-          e.preventDefault();
-          handleToolbarAction('mermaid-sequence');
-        }
+          // Mermaid Sequence: Alt+Shift+E
+          if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'e' || e.code === 'KeyE')) {
+            e.preventDefault();
+            handleToolbarAction('mermaid-sequence');
+          }
 
-        // Code Block: Alt+Shift+K
-        if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'k' || e.code === 'KeyK')) {
-          e.preventDefault();
-          handleToolbarAction('code');
-        }
+          // Code Block: Alt+Shift+K
+          if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'k' || e.code === 'KeyK')) {
+            e.preventDefault();
+            handleToolbarAction('code');
+          }
 
-        // Image: Alt+Shift+I
-        if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'i' || e.code === 'KeyI')) {
-          e.preventDefault();
-          handleToolbarAction('image');
+          // Image: Alt+Shift+I
+          if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'i' || e.code === 'KeyI')) {
+            e.preventDefault();
+            handleToolbarAction('image');
+          }
         }
-      }
-    };
+      };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    isSettingsOpen, setIsSettingsOpen, isQuickOpenOpen, setIsQuickOpenOpen,
-    zenMode, updateSettings, setIsSidebarOpen, sidebarRef, editorViewRef,
-    createNewDoc, deleteDoc, activeId, setViewMode, handleShare, handleToolbarAction
-  ]);
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [
+      isSettingsOpen, setIsSettingsOpen, isQuickOpenOpen, setIsQuickOpenOpen,
+      zenMode, updateSettings, setIsSidebarOpen, sidebarRef, editorViewRef,
+    createNewDoc, deleteDoc, activeId, setViewMode, handleShare, handleToolbarAction, toggleSyncScroll
+    ]);
 }
