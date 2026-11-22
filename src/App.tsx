@@ -17,6 +17,7 @@ import SettingsModal from './components/SettingsModal';
 import QuickOpen from './components/QuickOpen';
 import ConfirmModal from './components/ConfirmModal';
 import Breadcrumbs from './components/Breadcrumbs';
+import Toast, { type ToastMessage } from './components/Toast';
 import logoDark from './assets/logo_dark.png';
 import logoLight from './assets/logo_light.png';
 import { type SidebarHandle } from './components/Sidebar';
@@ -70,6 +71,7 @@ export default function App() {
   const [docToDelete, setDocToDelete] = useState<string | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [deleteContentsChecked, setDeleteContentsChecked] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
 
   const { settings, updateSettings, resetSettings } = useSettings();
 
@@ -80,6 +82,18 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isScrolling = useRef<string | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = useCallback((msg: Omit<ToastMessage, 'id'>) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    const id = generateId();
+    setToast({ ...msg, id });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null);
+    }, 1500);
+  }, []);
 
   const activeDoc = documents.find(d => d.id === activeId) || documents[0];
 
@@ -155,8 +169,18 @@ export default function App() {
 }, [settings.syncScroll, viewMode, getEditorScroller, getPreviewScroller]);
 
 const toggleSyncScroll = useCallback(() => {
-  updateSettings({ syncScroll: !settings.syncScroll });
-}, [settings.syncScroll, updateSettings]);
+  const nextState = !settings.syncScroll;
+  updateSettings({ syncScroll: nextState });
+
+  showToast({
+    icon: ArrowUpDown,
+    title: nextState ? 'Sync Scroll Enabled' : 'Sync Scroll Disabled',
+    description: nextState
+      ? (viewMode === 'split' ? 'Editor and preview scroll together' : 'Will sync when in split view')
+      : 'Panes scroll independently',
+    badge: 'Alt+Shift+S',
+  });
+}, [settings.syncScroll, updateSettings, showToast, viewMode]);
 
 // Synchronize positions when sync scroll is enabled or split mode is activated
 useEffect(() => {
@@ -663,6 +687,8 @@ return (
       multiple
       className="hidden"
     />
+
+    <Toast toast={toast} />
   </div>
 );
 }
